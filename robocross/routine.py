@@ -34,6 +34,7 @@ class Routine:
         remaining_time = self.workout_length * 60 - workout_count * (self.interval + self.minimum_rest_time)
         return math.floor(self.minimum_rest_time + remaining_time / workout_count)
 
+    @property
     def cardio_strength_mix(self) -> list[Workout]:
         """Build a workout based on alternating cardio and strength AerobicType values."""
         workout_items = []
@@ -42,12 +43,15 @@ class Routine:
             workout_items.append(random.choice(item_list))
         return workout_items
 
+    @property
     def cardio_workout(self) -> list[Workout]:
         return [random.choice(WORKOUT_DATA.cardio_workout_items) for _ in range(self.workout_count)]
 
+    @property
     def strength_workout(self) -> list[Workout]:
         return [random.choice(WORKOUT_DATA.strength_workout_items) for _ in range(self.workout_count)]
 
+    @property
     def random_workout(self) -> list[Workout]:
         return [random.choice(WORKOUT_DATA.workouts) for _ in range(self.workout_count)]
 
@@ -55,5 +59,5 @@ class Routine:
 
 if __name__ == "__main__":
     routine = Routine(workout_length=20)
-    for index, item in enumerate(routine.random_workout()):
+    for index, item in enumerate(routine.random_workout):
         print(f"{index + 1}:\t{item.name}")

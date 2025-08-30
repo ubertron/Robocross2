@@ -32,12 +32,19 @@ class GenericWidget(QWidget):
         }
         return self.add_widget(QLabel(text, alignment=alignment[position]))
 
-    def add_button(self, text: str, tool_tip: str, clicked: Callable | None = None) -> QPushButton:
+    def add_button(self, text: str, tool_tip: str="", clicked: Callable | None = None) -> QPushButton:
         """Add button to the layout"""
         button = QPushButton(text)
         button.setToolTip(tool_tip)
-        button.clicked.connect(clicked)
+        if clicked:
+            button.clicked.connect(clicked)
         return self.add_widget(button)
+
+    def add_stretch(self):
+        """
+        Add a stretch item to the layout
+        """
+        self.layout().addStretch(True)
 
 
 class ExampleWidget(GenericWidget):
