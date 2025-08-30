@@ -1,0 +1,243 @@
+{
+    "shuttle runs with medicine ball": {
+        "description": "",
+        "equipment": [
+            "medicine_ball"
+        ],
+        "aerobic_type": "cardio",
+        "target": [
+            "full_body"
+        ]
+    },
+    "spot running": {
+        "description": "",
+        "equipment": [],
+        "aerobic_type": "cardio",
+        "target": [
+            "full_body"
+        ]
+    },
+    "reverse flies standing": {
+        "description": "",
+        "equipment": [
+            "dumbbell"
+        ],
+        "aerobic_type": "strength",
+        "target": [
+            "back"
+        ]
+    },
+    "jumping jacks": {
+        "description": "",
+        "equipment": [],
+        "aerobic_type": "cardio",
+        "target": [
+            "full_body"
+        ]
+    },
+    "dumbbell flies": {
+        "description": "lie on bench back-facing, raise dumbbells vertically from the side",
+        "equipment": [
+            "bench",
+            "dumbbell"
+        ],
+        "aerobic_type": "strength",
+        "target": [
+            "chest"
+        ]
+    },
+    "skipping": {
+        "description": "use jump rope continuously",
+        "equipment": [
+            "jump_rope"
+        ],
+        "aerobic_type": "cardio",
+        "target": [
+            "full_body"
+        ]
+    },
+    "lunges": {
+        "description": "alternate steps forward with weights",
+        "equipment": [
+            "dumbbell",
+            "kettle_bell"
+        ],
+        "aerobic_type": "strength",
+        "target": [
+            "legs"
+        ]
+    },
+    "three point shoulder raise": {
+        "description": "raise dumbbells to front, rotate to side, then lower",
+        "equipment": [
+            "dumbbell"
+        ],
+        "aerobic_type": "strength",
+        "target": [
+            "shoulders"
+        ]
+    },
+    "three point shoulder raise reversed": {
+        "description": "raise dumbbells to side, rotate to front, then lower",
+        "equipment": [
+            "dumbbell"
+        ],
+        "aerobic_type": "strength",
+        "target": [
+            "shoulders"
+        ]
+    },
+    "crunches": {
+        "description": "lie on back and reach forward, bending at the hip",
+        "equipment": [
+            "mat"
+        ],
+        "aerobic_type": "strength",
+        "target": [
+            "abdominals"
+        ]
+    },
+    "russian twists": {
+        "description": "lie on back with legs raised, plant a weight on alternate sides",
+        "equipment": [
+            "mat"
+        ],
+        "aerobic_type": "strength",
+        "target": [
+            "abdominals"
+        ]
+    },
+    "squats": {
+        "description": "start standing holding weights, bend legs to low position keeping back straight",
+        "equipment": [
+            "dumbbell"
+        ],
+        "aerobic_type": "strength",
+        "target": [
+            "legs"
+        ]
+    },
+    "kettle bell swings": {
+        "description": "thrust quads to raise kettle bells to chest height",
+        "equipment": [
+            "kettle_bell"
+        ],
+        "aerobic_type": "strength",
+        "target": [
+            "full_body"
+        ]
+    },
+    "curl + press": {
+        "description": "standing curl with shoulder press",
+        "equipment": [
+            "dumbbell"
+        ],
+        "aerobic_type": "strength",
+        "target": [
+            "upper_body"
+        ]
+    },
+    "dumbbell curls": {
+        "description": "standing curl",
+        "equipment": [
+            "dumbbell"
+        ],
+        "aerobic_type": "strength",
+        "target": [
+            "upper_body"
+        ]
+    },
+    "tricep kickbacks": {
+        "description": "standing bent at the waist, raise dumbbells to horizontal",
+        "equipment": [
+            "dumbbell"
+        ],
+        "aerobic_type": "strength",
+        "target": [
+            "arms"
+        ]
+    },
+    "oblique twist": {
+        "description": "standing bent at the waist with bo staff at shoulder level, twist to alternate sides",
+        "equipment": [
+            "bo_staff"
+        ],
+        "aerobic_type": "strength",
+        "target": [
+            "abdominals"
+        ]
+    },
+    "bicycle crunches": {
+        "description": "lying on back, rotate legs forward in a circular motion",
+        "equipment": [
+            "mat"
+        ],
+        "aerobic_type": "strength",
+        "target": [
+            "abdominals"
+        ]
+    },
+    "bench press": {
+        "description": "lying on back, raise weights vertically",
+        "equipment": [
+            "bench",
+            "dumbbell",
+            "barbell"
+        ],
+        "aerobic_type": "strength",
+        "target": [
+            "chest"
+        ]
+    },
+    "medicine ball slams": {
+        "description": "raise medicine ball overhead, then slam to ground",
+        "equipment": [
+            "medicine_ball"
+        ],
+        "aerobic_type": "strength",
+        "target": [
+            "full_body"
+        ]
+    },
+    "burpees": {
+        "description": "push up, squat thrust, star jump",
+        "equipment": [
+            "mat"
+        ],
+        "aerobic_type": "cardio",
+        "target": [
+            "full_body"
+        ]
+    },
+    "weighted punches": {
+        "description": "continuous punches forward holding weights",
+        "equipment": [
+            "dumbbell"
+        ],
+        "aerobic_type": "cardio",
+        "target": [
+            "arms"
+        ]
+    },
+    "plank": {
+        "description": "facing down with elbows on the floor, hold a straight position",
+        "equipment": [
+            "mat"
+        ],
+        "aerobic_type": "strength",
+        "target": [
+            "abdominals"
+        ]
+    },
+    "shoulder press": {
+        "description": "standing up, hold dumbbells at shoulder level and raise vertically",
+        "equipment": [
+            "dumbbell"
+        ],
+        "aerobic_type": "strength",
+        "target": [
+            "shoulders",
+            "arms"
+        ]
+    }
+}
