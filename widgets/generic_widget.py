@@ -6,6 +6,8 @@ from typing import Callable
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget, QLabel, QPushButton
 from core.core_enums import Alignment, Position
+from widgets.button_bar import ButtonBar
+from widgets.panel_widget import PanelWidget
 
 
 class GenericWidget(QWidget):
@@ -17,11 +19,6 @@ class GenericWidget(QWidget):
         layout.setContentsMargins(margin, margin, margin, margin)
         layout.setSpacing(spacing)
         self.setLayout(layout)
-
-    def add_widget(self, widget: QWidget) -> QWidget:
-        """Add widget to the layout"""
-        self.layout().addWidget(widget)
-        return widget
 
     def add_label(self, text: str, position: Position = Position.center) -> QLabel:
         """Add label to the layout"""
@@ -40,11 +37,27 @@ class GenericWidget(QWidget):
             button.clicked.connect(clicked)
         return self.add_widget(button)
 
+    def add_button_bar(self) -> ButtonBar:
+        """Add button bar"""
+        button_bar = self.add_widget(ButtonBar())
+        return button_bar
+
+    def add_panel(self, widget: QWidget) -> tuple[PanelWidget, QWidget]:
+        """Add panel to the layout"""
+        panel = PanelWidget(widget=widget)
+        self.add_widget(panel)
+        return panel, widget
+
     def add_stretch(self):
         """
         Add a stretch item to the layout
         """
         self.layout().addStretch(True)
+
+    def add_widget(self, widget: QWidget) -> QWidget:
+        """Add widget to the layout"""
+        self.layout().addWidget(widget)
+        return widget
 
 
 class ExampleWidget(GenericWidget):

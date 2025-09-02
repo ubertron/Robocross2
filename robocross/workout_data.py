@@ -104,26 +104,28 @@ def convert_to_data_file():
 
 
 class WorkoutData:
-    def __init__(self):
+    def __init__(self, filter_list: tuple = ()):
         with DATA_FILE_PATH.open("r") as f:
             self.data = json.load(f)
+        self.filter_list = filter_list
 
     @property
     def workouts(self) -> list[Workout]:
         workouts = []
         for name, value in self.data.items():
-            equipment_list = [Equipment.__members__.get(x) for x in value.get("equipment")]
-            target_list = [Target.__members__.get(x) for x in value.get("target")]
-            workouts.append(
-                Workout(
-                    name=name,
-                    description=value.get("description"),
-                    equipment=equipment_list,
-                    intensity=Intensity.__members__.get(value.get("intensity")),
-                    aerobic_type=AerobicType.__members__.get(value.get("aerobic_type")),
-                    target=target_list,
+            if name not in self.filter_list:
+                equipment_list = [Equipment.__members__.get(x) for x in value.get("equipment")]
+                target_list = [Target.__members__.get(x) for x in value.get("target")]
+                workouts.append(
+                    Workout(
+                        name=name,
+                        description=value.get("description"),
+                        equipment=equipment_list,
+                        intensity=Intensity.__members__.get(value.get("intensity")),
+                        aerobic_type=AerobicType.__members__.get(value.get("aerobic_type")),
+                        target=target_list,
+                    )
                 )
-            )
         return workouts
 
     @property

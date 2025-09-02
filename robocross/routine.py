@@ -1,17 +1,20 @@
 import json
+import logging
 import math
 import random
 from typing import Sequence
+
+from core.logging_utils import get_logger
 from robocross.workout_data import WorkoutData
 from robocross import DATA_FILE_PATH
 from robocross.workout import Workout, AerobicType
 
 
-NOPE_LIST = tuple(["burpees"])
-WORKOUT_DATA: WorkoutData = WorkoutData()
+LOGGER = get_logger(name=__name__, level=logging.DEBUG)
+# WORKOUT_DATA: WorkoutData = WorkoutData()
 
 class Routine:
-    def __init__(self, interval: int = 120, workout_length: int = 35, rest_time: int = 30, nope_list: list = NOPE_LIST):
+    def __init__(self, interval: int = 120, workout_length: int = 35, rest_time: int = 30, nope_list: list = ()):
         """
         Workout Routine
         :param interval: seconds
@@ -22,6 +25,9 @@ class Routine:
         self.workout_length = workout_length
         self.minimum_rest_time = rest_time
         self.nope_list = nope_list
+        self.workout_data: WorkoutData = WorkoutData(filter_list=self.nope_list)
+
+        LOGGER.debug(self.nope_list)
 
     @property
     def workout_count(self) -> int:
@@ -39,21 +45,21 @@ class Routine:
         """Build a workout based on alternating cardio and strength AerobicType values."""
         workout_items = []
         for i in range(self.workout_count):
-            item_list = WORKOUT_DATA.cardio_workout_items if i % 2 == 0 else WORKOUT_DATA.strength_workout_items
+            item_list = self.workout_data.cardio_workout_items if i % 2 == 0 else self.workout_data.strength_workout_items
             workout_items.append(random.choice(item_list))
         return workout_items
 
     @property
     def cardio_workout(self) -> list[Workout]:
-        return [random.choice(WORKOUT_DATA.cardio_workout_items) for _ in range(self.workout_count)]
+        return [random.choice(self.workout_data.cardio_workout_items) for _ in range(self.workout_count)]
 
     @property
     def strength_workout(self) -> list[Workout]:
-        return [random.choice(WORKOUT_DATA.strength_workout_items) for _ in range(self.workout_count)]
+        return [random.choice(self.workout_data.strength_workout_items) for _ in range(self.workout_count)]
 
     @property
     def random_workout(self) -> list[Workout]:
-        return [random.choice(WORKOUT_DATA.workouts) for _ in range(self.workout_count)]
+        return [random.choice(self.workout_data.workouts) for _ in range(self.workout_count)]
 
 
 
