@@ -2,6 +2,7 @@ from enum import Enum, auto, unique
 
 class Alignment(Enum):
     horizontal = auto()
+    stacked = auto()
     vertical = auto()
 
 class Position(Enum):

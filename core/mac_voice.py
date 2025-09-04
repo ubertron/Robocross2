@@ -9,8 +9,7 @@ from pathlib import Path
 from typing import Optional
 
 from core.logging_utils import get_logger
-
-LOGGER = get_logger(name=__name__, level=logging.DEBUG)
+GERGER = get_logger(name=__name__, level=logging.DEBUG)
 
 
 class Voice(Enum):
@@ -85,4 +84,3 @@ class MacVoice:
 if __name__ == "__main__":
     _voice = MacVoice(voice=Voice.Samantha)
     _voice.say("This is a sentence.")
-

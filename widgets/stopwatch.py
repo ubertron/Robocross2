@@ -8,16 +8,20 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import QTimer, QTime, Qt, Signal
 from PySide6.QtGui import QFont
 
+from collections import OrderedDict
 from core.mac_voice import MacVoice, Voice
 from core.logging_utils import get_logger
+from robocross.robocross_enums import RunMode
 from widgets.generic_widget import GenericWidget
 
 
-LOGGER: logging.Logger = get_logger(name=__name__, level=logging.DEBUG)
+LOGGER: logging.Logger = get_logger(name=__name__, level=logging.INFO)
 
 
 class Stopwatch(GenericWidget):
     time_reached = Signal(str, str)  # emit time + message
+    play_pause_clicked = Signal(RunMode)
+    reset_clicked = Signal()
 
     def __init__(self):
         super().__init__(title="Stopwatch")
@@ -35,11 +39,11 @@ class Stopwatch(GenericWidget):
         # Stopwatch state
         self.elapsed = QTime(0, 0, 0)
         self.running = False
-        self.targets: dict[str, str] = {}  # time -> spoken message
+        self.targets: OrderedDict[str, str] = {}  # time -> spoken message
 
         # Connections
-        self.play_pause_btn.clicked.connect(self.toggle)
-        self.reset_btn.clicked.connect(self.reset)
+        self.play_pause_btn.clicked.connect(self.play_pause_button_clicked)
+        self.reset_btn.clicked.connect(self.reset_button_clicked)
 
         # Timer
         self.timer = QTimer(self)
@@ -52,7 +56,7 @@ class Stopwatch(GenericWidget):
         """Return the current stopwatch time as a string (hh:mm:ss)."""
         return self.elapsed.toString("hh:mm:ss")
 
-    def notify_at(self, schedule: dict[str, str]):
+    def set_notifications(self, schedule: OrderedDict[str, str]):
         """
         Schedule notifications with spoken messages.
         Example:
@@ -61,25 +65,29 @@ class Stopwatch(GenericWidget):
                 "00:00:10": "Ten seconds reached"
             })
         """
+        self.targets = {}
         self.targets.update(schedule)
 
-    def toggle(self):
+    def play_pause_button_clicked(self):
         if not self.running:
             self.timer.start(1000)
             self.play_pause_btn.setText("Pause")
             self.running = True
+            run_mode = RunMode.play
         else:
             self.timer.stop()
             self.play_pause_btn.setText("Play")
             self.running = False
+            run_mode = RunMode.paused
+        self.play_pause_clicked.emit(run_mode)
 
-    def reset(self):
+    def reset_button_clicked(self):
+        self.reset_clicked.emit()
         self.timer.stop()
         self.elapsed = QTime(0, 0, 0)
         self.time_label.setText("00:00:00")
         self.play_pause_btn.setText("Play")
         self.running = False
-        # Keep notifications unless explicitly cleared
 
     def update_time(self):
         self.elapsed = self.elapsed.addSecs(1)
@@ -92,7 +100,8 @@ class Stopwatch(GenericWidget):
 
     def _speak(self, t: str, message: str):
         """Queue text to be spoken in the background."""
-        self.speaker.speak(message)
+        if LOGGER.level == logging.DEBUG:
+            self.speaker.speak(message)
         LOGGER.debug(f"🗣 {t} → {message}")
 
 
@@ -103,7 +112,7 @@ if __name__ == "__main__":
     stopwatch.show()
 
     # Example: repeat notifications
-    stopwatch.notify_at({
+    stopwatch.set_notifications({
         "00:00:05": "Five seconds have passed",
         "00:00:10": "Ten seconds reached"
     })

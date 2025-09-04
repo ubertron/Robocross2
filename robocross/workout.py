@@ -25,6 +25,7 @@ class Intensity(Enum):
 class AerobicType(Enum):
     cardio = auto()
     strength = auto()
+    recovery = auto()
 
 @unique
 class Target(Enum):
@@ -46,3 +47,7 @@ class Workout:
     intensity: Intensity
     aerobic_type: AerobicType
     target: list[Target]
+    time: int
+
+    def __repr__(self):
+        return f'{self.name} - time: {self.time} seconds'

@@ -1,4 +1,7 @@
 from PySide6.QtWidgets import QFormLayout, QWidget, QPushButton, QLabel, QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox
+from typing import Union
+
+from core import DEVELOPER
 
 
 class FormWidget(QWidget):
@@ -8,7 +11,7 @@ class FormWidget(QWidget):
         self.setLayout(QFormLayout())
 
     @property
-    def data(self) -> dict[str, any]:
+    def data(self) -> dict[str, Union[str, int, float, bool]]:
         data = {}
         for i in range(self.count):
             idx = i * 2

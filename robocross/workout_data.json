@@ -4,36 +4,44 @@
         "equipment": [
             "medicine_ball"
         ],
+        "intensity": "high",
         "aerobic_type": "cardio",
         "target": [
             "full_body"
-        ]
+        ],
+        "time": 120
     },
     "spot running": {
         "description": "",
         "equipment": [],
+        "intensity": "high",
         "aerobic_type": "cardio",
         "target": [
             "full_body"
-        ]
+        ],
+        "time": 120
     },
     "reverse flies standing": {
         "description": "",
         "equipment": [
             "dumbbell"
         ],
+        "intensity": "medium",
         "aerobic_type": "strength",
         "target": [
             "back"
-        ]
+        ],
+        "time": 120
     },
     "jumping jacks": {
         "description": "",
         "equipment": [],
+        "intensity": "high",
         "aerobic_type": "cardio",
         "target": [
             "full_body"
-        ]
+        ],
+        "time": 120
     },
     "dumbbell flies": {
         "description": "lie on bench back-facing, raise dumbbells vertically from the side",
@@ -41,20 +49,24 @@
             "bench",
             "dumbbell"
         ],
+        "intensity": "medium",
         "aerobic_type": "strength",
         "target": [
             "chest"
-        ]
+        ],
+        "time": 120
     },
     "skipping": {
         "description": "use jump rope continuously",
         "equipment": [
             "jump_rope"
         ],
+        "intensity": "high",
         "aerobic_type": "cardio",
         "target": [
             "full_body"
-        ]
+        ],
+        "time": 120
     },
     "lunges": {
         "description": "alternate steps forward with weights",
@@ -62,120 +74,144 @@
             "dumbbell",
             "kettle_bell"
         ],
+        "intensity": "medium",
         "aerobic_type": "strength",
         "target": [
             "legs"
-        ]
+        ],
+        "time": 120
     },
     "three point shoulder raise": {
         "description": "raise dumbbells to front, rotate to side, then lower",
         "equipment": [
             "dumbbell"
         ],
+        "intensity": "medium",
         "aerobic_type": "strength",
         "target": [
             "shoulders"
-        ]
+        ],
+        "time": 120
     },
     "three point shoulder raise reversed": {
         "description": "raise dumbbells to side, rotate to front, then lower",
         "equipment": [
             "dumbbell"
         ],
+        "intensity": "medium",
         "aerobic_type": "strength",
         "target": [
             "shoulders"
-        ]
+        ],
+        "time": 120
     },
     "crunches": {
         "description": "lie on back and reach forward, bending at the hip",
         "equipment": [
             "mat"
         ],
+        "intensity": "medium",
         "aerobic_type": "strength",
         "target": [
             "abdominals"
-        ]
+        ],
+        "time": 120
     },
     "russian twists": {
         "description": "lie on back with legs raised, plant a weight on alternate sides",
         "equipment": [
             "mat"
         ],
+        "intensity": "medium",
         "aerobic_type": "strength",
         "target": [
             "abdominals"
-        ]
+        ],
+        "time": 120
     },
     "squats": {
         "description": "start standing holding weights, bend legs to low position keeping back straight",
         "equipment": [
             "dumbbell"
         ],
+        "intensity": "medium",
         "aerobic_type": "strength",
         "target": [
             "legs"
-        ]
+        ],
+        "time": 120
     },
     "kettle bell swings": {
         "description": "thrust quads to raise kettle bells to chest height",
         "equipment": [
             "kettle_bell"
         ],
+        "intensity": "high",
         "aerobic_type": "strength",
         "target": [
             "full_body"
-        ]
+        ],
+        "time": 120
     },
     "curl + press": {
         "description": "standing curl with shoulder press",
         "equipment": [
             "dumbbell"
         ],
+        "intensity": "medium",
         "aerobic_type": "strength",
         "target": [
             "upper_body"
-        ]
+        ],
+        "time": 120
     },
     "dumbbell curls": {
         "description": "standing curl",
         "equipment": [
             "dumbbell"
         ],
+        "intensity": "medium",
         "aerobic_type": "strength",
         "target": [
             "upper_body"
-        ]
+        ],
+        "time": 120
     },
     "tricep kickbacks": {
         "description": "standing bent at the waist, raise dumbbells to horizontal",
         "equipment": [
             "dumbbell"
         ],
+        "intensity": "medium",
         "aerobic_type": "strength",
         "target": [
             "arms"
-        ]
+        ],
+        "time": 120
     },
     "oblique twist": {
         "description": "standing bent at the waist with bo staff at shoulder level, twist to alternate sides",
         "equipment": [
             "bo_staff"
         ],
+        "intensity": "medium",
         "aerobic_type": "strength",
         "target": [
             "abdominals"
-        ]
+        ],
+        "time": 120
     },
     "bicycle crunches": {
         "description": "lying on back, rotate legs forward in a circular motion",
         "equipment": [
             "mat"
         ],
+        "intensity": "high",
         "aerobic_type": "strength",
         "target": [
             "abdominals"
-        ]
+        ],
+        "time": 120
     },
     "bench press": {
         "description": "lying on back, raise weights vertically",
@@ -184,60 +220,72 @@
             "dumbbell",
             "barbell"
         ],
+        "intensity": "medium",
         "aerobic_type": "strength",
         "target": [
             "chest"
-        ]
+        ],
+        "time": 120
     },
     "medicine ball slams": {
         "description": "raise medicine ball overhead, then slam to ground",
         "equipment": [
             "medicine_ball"
         ],
+        "intensity": "high",
         "aerobic_type": "strength",
         "target": [
             "full_body"
-        ]
+        ],
+        "time": 120
     },
     "burpees": {
         "description": "push up, squat thrust, star jump",
         "equipment": [
             "mat"
         ],
+        "intensity": "high",
         "aerobic_type": "cardio",
         "target": [
             "full_body"
-        ]
+        ],
+        "time": 120
     },
     "weighted punches": {
         "description": "continuous punches forward holding weights",
         "equipment": [
             "dumbbell"
         ],
+        "intensity": "high",
         "aerobic_type": "cardio",
         "target": [
             "arms"
-        ]
+        ],
+        "time": 120
     },
     "plank": {
         "description": "facing down with elbows on the floor, hold a straight position",
         "equipment": [
             "mat"
         ],
+        "intensity": "low",
         "aerobic_type": "strength",
         "target": [
             "abdominals"
-        ]
+        ],
+        "time": 120
     },
     "shoulder press": {
         "description": "standing up, hold dumbbells at shoulder level and raise vertically",
         "equipment": [
             "dumbbell"
         ],
+        "intensity": "high",
         "aerobic_type": "strength",
         "target": [
             "shoulders",
             "arms"
-        ]
+        ],
+        "time": 120
     }
 }
