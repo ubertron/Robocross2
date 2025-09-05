@@ -16,7 +16,7 @@ from robocross.routine import Routine
 from robocross.parameters_widget import ParametersWidget
 from robocross.workout import Workout
 from robocross.workout_form import WorkoutForm
-from robocross.workout_viewer import WorkoutViewer
+from robocross.viewer import Viewer
 from widgets import form_widget
 from widgets.generic_widget import GenericWidget
 from widgets.panel_widget import PanelWidget
@@ -38,7 +38,7 @@ class RoboCrossUI(GenericWidget):
         self.parameters_widget: ParametersWidget = ParametersWidget()
         self.form = self.parameters_widget.form
         self.tab_widget.addTab(self.parameters_widget, 'Create')
-        self.viewer: WorkoutViewer = WorkoutViewer()
+        self.viewer: Viewer = Viewer()
         self.tab_widget.addTab(self.viewer, 'Workout')
         self.info = ""
         self.routine = None
@@ -49,6 +49,7 @@ class RoboCrossUI(GenericWidget):
         self.parameters_widget.build_button_clicked.connect(self.build_button_clicked)
         self.parameters_widget.print_button_clicked.connect(self.print_button_clicked)
         self.setMinimumWidth(self.minimum_width)
+        self.viewer.stopwatch.play_pause_btn.setEnabled(False)
 
     @property
     def date_time_string(self) -> str:
@@ -99,6 +100,7 @@ class RoboCrossUI(GenericWidget):
             rest_time=self.form.rest_time,
             nope_list=self.form.nope_list,
         )
+        self.viewer.stopwatch.play_pause_btn.setEnabled(True)
 
     def print_button_clicked(self):
         """Event for print button."""

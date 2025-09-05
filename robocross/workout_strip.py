@@ -20,8 +20,9 @@ class WorkoutStrip(GridWidget):
     progress_bar_style = 'background-color: rgb(0, 255, 0)'
     text_style = 'color: rgb(16, 16, 16)'
 
-    def __init__(self, workout: Workout):
+    def __init__(self, workout: Workout, period: int):
         self.workout = workout
+        self.period = period
         super(WorkoutStrip, self).__init__(self.title, margin=1)
         self.background = self.add_label('', row=0, column=0)
         self.background.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Preferred)
@@ -31,17 +32,16 @@ class WorkoutStrip(GridWidget):
         self.timer: QTimer = QTimer()
         self.time: float = 0.0
         self.progress: float = 0.0
-        self.sample_size: float = 1.0
+        # self.sample_size: float = 1.0
         self.setup_ui()
 
     def setup_ui(self):
         """Setup ui."""
-        # self.background.setStyleSheet(self.background_in_progress)
         self.label.setStyleSheet(self.text_style)
         self.progress_label.setAlignment(Qt.AlignLeft)
         self.progress_label.setStyleSheet(self.progress_bar_style)
         self.timer.timeout.connect(self.update_progress)
-        self.timer.setInterval(self.sample_size * 1000)
+        self.timer.setInterval(self.period)
         self.reset()
 
     def resizeEvent(self, event):
@@ -67,7 +67,7 @@ class WorkoutStrip(GridWidget):
         self.timer.stop()
 
     def update_progress(self):
-        self.time += self.sample_size
+        self.time += self.period / 1000.0
         self.progress = min(1.0, self.time / self.workout.time)
         if self.progress == 1.0:
             self.timer.stop()

@@ -20,15 +20,16 @@ from widgets.stopwatch import Stopwatch
 LOGGER = logging_utils.get_logger(name=__name__, level=logging.DEBUG)
 
 
-class WorkoutViewer(GenericWidget):
+class Viewer(GenericWidget):
     """Widget to run workouts"""
 
     end_notification: str = "end of workout"
     scroll_panel_width: int = 240
+    period = 50  # evaluation time for timers
 
     def __init__(self):
-        super(WorkoutViewer, self).__init__(title="Workout Viewer", margin=0, spacing=0)
-        self.stopwatch: Stopwatch = self.add_widget(Stopwatch())
+        super(Viewer, self).__init__(title="Workout Viewer", margin=0, spacing=0)
+        self.stopwatch: Stopwatch = self.add_widget(Stopwatch(period=self.period))
         self.workout_pane: GenericWidget = GenericWidget(margin=0, spacing=0)
         content_pane = self.add_widget(GenericWidget(alignment=Alignment.horizontal, margin=0, spacing=0))
         scroll_widget: ScrollWidget = content_pane.add_widget(ScrollWidget())
@@ -83,7 +84,7 @@ class WorkoutViewer(GenericWidget):
 
         # create the workout strips
         for workout in workout_list:
-            workout_strip = WorkoutStrip(workout=workout)
+            workout_strip = WorkoutStrip(workout=workout, period=self.period)
             workout_strip.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
             self.workout_pane.add_widget(workout_strip)
         self.workout_pane.add_stretch()
@@ -98,7 +99,7 @@ class WorkoutViewer(GenericWidget):
         self.notification_dict[self.delta_to_string(time_delta=ref_time)] = self.end_notification
 
         # send the times to the stopwatch
-        self.stopwatch.set_notifications(self.notification_dict)
+        self.stopwatch.set_targets(self.notification_dict)
 
     @property
     def workout_strips(self) -> list[WorkoutStrip]:
@@ -107,7 +108,6 @@ class WorkoutViewer(GenericWidget):
     @property
     def workout_length(self) -> str:
         final_time = list(self.stopwatch.targets.keys())[-1]
-        LOGGER.debug(final_time)
         hours, minutes, seconds = final_time.split(":")
         total_minutes = int(hours) * 60 + int(minutes) + int(seconds) / 60
         return f"{total_minutes: .2f}"
@@ -124,7 +124,9 @@ class WorkoutViewer(GenericWidget):
 
     def advance_workout(self, *args):
         """Workout item finished."""
-        self.current_index += 1
+        if args[0] != "00:00:00":
+            self.current_index += 1
+        print(f"time reached: {args}")
         if self.current_index == len(self.workout_list):
             self.mac_voice.speak(line="workout complete")
             self.stopwatch.reset_button_clicked()
