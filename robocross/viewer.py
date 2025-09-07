@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QSizePolicy, QLabel
 from core import logging_utils
 from core.core_enums import Alignment
 from core.mac_voice import MacVoice, Voice
+from robocross import REST_PERIOD
 from robocross.robocross_enums import RunMode
 from robocross.workout import Workout
 from robocross.workout_strip import WorkoutStrip
@@ -42,7 +43,9 @@ class Viewer(GenericWidget):
         self.notification_dict = OrderedDict()
         self.rest_time = 0
         self.current_index = 0
+        self.started = False
         self.mac_voice = MacVoice(voice=Voice.Samantha)
+        self.run_mode = RunMode.paused
         self.setup_ui()
 
     @property
@@ -64,6 +67,14 @@ class Viewer(GenericWidget):
     @info.setter
     def info(self, value: str):
         self.info_label.setText(value)
+
+    @property
+    def next_index(self) -> int | None:
+        return self.current_index + 1 if self.current_index < len(self.workout_list) - 1 else None
+
+    @property
+    def next_workout(self) -> Workout | None:
+        return self.workout_list[self.next_index] if self.next_index else None
 
     @property
     def rest_time(self) -> int:
@@ -106,11 +117,20 @@ class Viewer(GenericWidget):
         return self.workout_pane.widgets
 
     @property
-    def workout_length(self) -> str:
+    def workout_length(self) -> float:
         final_time = list(self.stopwatch.targets.keys())[-1]
         hours, minutes, seconds = final_time.split(":")
-        total_minutes = int(hours) * 60 + int(minutes) + int(seconds) / 60
-        return f"{total_minutes: .2f}"
+        return int(hours) * 60 + int(minutes) + int(seconds) / 60
+
+    @property
+    def workout_length_nice(self) -> str:
+        final_time = list(self.stopwatch.targets.keys())[-1]
+        hours, minutes, seconds = [int(x) for x in final_time.split(":")]
+        hours_string = f"{hours} hour, " if hours > 0 else ""
+        minutes_string = f"{minutes} minute, " if minutes else ""
+        seconds_string = f"{seconds} second" if seconds else ""
+        string =  f"{hours_string}{minutes_string}{seconds_string}"
+        return string[:-1] if string.endswith(",") else string
 
 
     @staticmethod
@@ -124,38 +144,53 @@ class Viewer(GenericWidget):
 
     def advance_workout(self, *args):
         """Workout item finished."""
+        self.started = True
         if args[0] != "00:00:00":
             self.current_index += 1
-        print(f"time reached: {args}")
+        LOGGER.info(f"time reached: {args}")
         if self.current_index == len(self.workout_list):
             self.mac_voice.speak(line="workout complete")
             self.stopwatch.reset_button_clicked()
             self.stopwatch_reset()
-            self.info = f"{self.workout_length} Minute Workout Complete"
+            self.info = f"{self.workout_length_nice} workout complete"
         else:
             self.workout_strips[self.current_index].start()
-            self.continue_workout(run_mode=RunMode.play)
+            self.play_workout()
 
-    def setup_ui(self):
-        self.stopwatch.time_reached.connect(self.advance_workout)
-        self.stopwatch.play_pause_clicked.connect(self.continue_workout)
-        self.stopwatch.reset_clicked.connect(self.stopwatch_reset)
+    def pause_workout(self):
+        """Pause the workout."""
+        speech = f"Pausing {self.current_workout.name}"
+        self.mac_voice.speak(line=speech)
+        self.info = "Paused"
 
-    def continue_workout(self, run_mode: RunMode):
-        """Stopwatch started event."""
-        if run_mode is RunMode.play:
-            speech = f"Starting {self.current_workout.name}"
-            self.workout_strips[self.current_index].start()
+    def play_workout(self):
+        """Play the workout."""
+        if self.current_workout.name == REST_PERIOD:
+            if self.next_workout is not None:
+                next_string = f"Next workout is {self.next_workout.name}"
+            else:
+                next_string = "End of workout coming up"
+            speech = f"Rest time {self.current_workout.time} seconds.[[slnc 500]]{next_string}"
             self.mac_voice.speak(line=speech)
+            self.info = (
+                f"<b>Rest Period</b><br />"
+                f"Duration: {self.current_workout.time} seconds<br /><br />{next_string}"
+            )
+        else:
+            if self.started:
+                speech = f"Starting {self.current_workout.name}"
+                self.mac_voice.speak(line=speech)
+            self.workout_strips[self.current_index].start()
             description = self.current_workout.description if self.current_workout.description else "(no details)"
             self.info = (
                 f"<b>{self.current_workout.name.title()}</b><br />"
-                f"Duration: {self.current_workout.time} seconds<br />{description.capitalize()}"
+                f"Duration: {self.current_workout.time} seconds<br /><br />{description.capitalize()}"
             )
-        else:
-            speech = f"Pausing {self.current_workout.name}"
-            self.mac_voice.speak(line=speech)
-            self.info = "Paused"
+
+    def setup_ui(self):
+        self.stopwatch.time_reached.connect(self.advance_workout)
+        self.stopwatch.play_pause_clicked.connect(self.toggle_run_mode)
+        self.stopwatch.reset_clicked.connect(self.stopwatch_reset)
 
     def stopwatch_reset(self):
         """Stopwatch reset event."""
@@ -163,3 +198,13 @@ class Viewer(GenericWidget):
             x.reset()
             x.timer.stop()
         self.current_index = 0
+        self.started = False
+        self.run_mode = RunMode.paused
+
+    def toggle_run_mode(self):
+        """Toggle run mode."""
+        self.run_mode = RunMode.play if self.run_mode is RunMode.paused else RunMode.paused
+        if self.run_mode is RunMode.paused:
+            self.pause_workout()
+        else:
+            self.play_workout()

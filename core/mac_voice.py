@@ -70,7 +70,10 @@ class MacVoice:
         self.voice: str = voice.name.replace("_", "-") if voice else random.choice(Voice.names())
 
     def speak(self, line: str):
-        """Text to speech"""
+        """Text to speech
+
+        add '[[slnc 500]]' to line string to include a pause of 500 ms
+        """
         os.system(f'say -v {self.voice} "{line}"')
 
     def save(self, line: str, file_path: Optional[Path] = None):

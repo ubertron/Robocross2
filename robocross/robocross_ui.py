@@ -14,7 +14,7 @@ from core.logging_utils import get_logger
 from robocross import WorkoutType, REST_PERIOD
 from robocross.routine import Routine
 from robocross.parameters_widget import ParametersWidget
-from robocross.workout import Workout
+from robocross.workout import Workout, Equipment
 from robocross.workout_form import WorkoutForm
 from robocross.viewer import Viewer
 from widgets import form_widget
@@ -40,9 +40,9 @@ class RoboCrossUI(GenericWidget):
         self.tab_widget.addTab(self.parameters_widget, 'Create')
         self.viewer: Viewer = Viewer()
         self.tab_widget.addTab(self.viewer, 'Workout')
-        self.info = ""
         self.routine = None
         self.workout_list = []
+        self.parameters_widget.info = "Build your workout..."
         self.setup_ui()
 
     def setup_ui(self):
@@ -54,6 +54,12 @@ class RoboCrossUI(GenericWidget):
     @property
     def date_time_string(self) -> str:
         return datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+
+    @property
+    def equipment(self) -> list[Equipment]:
+        equipment = list({x.name.replace('_', ' ') for y in self.workout_list for x in y.equipment})
+        equipment.sort(key=lambda x: x.lower())
+        return equipment
 
     @property
     def info(self) -> str:
@@ -90,7 +96,9 @@ class RoboCrossUI(GenericWidget):
 
     @property
     def workout_report(self) -> str:
-        return '\n'.join(f"• {x.name}" for x in self.workout_list if x.name != REST_PERIOD)
+        report = '\n'.join(f"• {x.name}" for x in self.workout_list if x.name != REST_PERIOD)
+        equipment = ', '.join(self.equipment)
+        return f"Workout items:\n{report}\n\nEquipment: {equipment}"
 
     def build_button_clicked(self):
         """Create the routine."""

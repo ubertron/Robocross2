@@ -83,7 +83,6 @@ class Stopwatch(GenericWidget):
         self.completed_targets = []
 
     def update_time(self):
-        # self.elapsed = self.elapsed.addSecs(1)
         self.elapsed = self.elapsed.addMSecs(self.period)
         now_str = self.elapsed.toString("hh:mm:ss")
         self.time_label.setText(now_str)

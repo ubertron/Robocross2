@@ -5,8 +5,7 @@ import random
 from core.logging_utils import get_logger
 from robocross.workout_data import WorkoutData
 from robocross import REST_PERIOD, WorkoutType
-from robocross.workout import Workout, AerobicType, Intensity
-
+from robocross.workout import Workout, AerobicType, Intensity, Equipment
 
 LOGGER = get_logger(name=__name__, level=logging.DEBUG)
 
@@ -65,10 +64,14 @@ class Routine:
     @property
     def test_workout(self) -> list[Workout]:
         return [
-            Workout(name="test item 1", description="description 1", equipment=[], intensity=Intensity.low,
-                    aerobic_type=AerobicType.recovery, target=[], time=8),
-            Workout(name="test item 2", description="description 2", equipment=[], intensity=Intensity.low,
-                    aerobic_type=AerobicType.recovery, target=[], time=8),
+            Workout(name="test item 1", description="description 1", equipment=[Equipment.barbell, Equipment.dumbbell], intensity=Intensity.low,
+                    aerobic_type=AerobicType.recovery, target=[], time=5),
+            Workout(name=REST_PERIOD, description="rest time 1", equipment=[], intensity=Intensity.low,
+                    aerobic_type=AerobicType.recovery, target=[], time=5),
+            Workout(name="test item 2", description="description 2", equipment=[Equipment.barbell, Equipment.mat], intensity=Intensity.low,
+                    aerobic_type=AerobicType.recovery, target=[], time=5),
+            Workout(name=REST_PERIOD, description="rest time 2", equipment=[], intensity=Intensity.low,
+                    aerobic_type=AerobicType.recovery, target=[], time=5),
         ]
 
     def build_routine(self, workouts: list[Workout]):
