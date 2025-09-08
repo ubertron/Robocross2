@@ -1,6 +1,6 @@
 {
-    "shuttle runs with medicine ball": {
-        "description": "",
+    "shuttle runs with medicine ball carry": {
+        "description": "carry a medicine ball and tag the ground point at each end",
         "equipment": [
             "medicine_ball"
         ],
@@ -11,9 +11,11 @@
         ],
         "time": 120
     },
-    "spot running": {
-        "description": "",
-        "equipment": [],
+    "shuttle runs with medicine ball throw": {
+        "description": "throw a medicine ball to the opposite end after reaching each side",
+        "equipment": [
+            "medicine_ball"
+        ],
         "intensity": "high",
         "aerobic_type": "cardio",
         "target": [
@@ -21,8 +23,20 @@
         ],
         "time": 120
     },
+    "high knees": {
+        "description": "alternate high knee raises in upright posture (optionally with dumbbells)",
+        "equipment": [
+            "dumbbell"
+        ],
+        "intensity": "high",
+        "aerobic_type": "cardio",
+        "target": [
+            "legs"
+        ],
+        "time": 120
+    },
     "reverse flies standing": {
-        "description": "",
+        "description": "bend forward at the waist, raise dumbbells with straight arms to the level of the body",
         "equipment": [
             "dumbbell"
         ],
@@ -34,7 +48,7 @@
         "time": 120
     },
     "jumping jacks": {
-        "description": "",
+        "description": "alternate jumping on the spot, raise arms high as you split your legs, then lower arms as you bring your legs in",
         "equipment": [],
         "intensity": "high",
         "aerobic_type": "cardio",
@@ -287,5 +301,18 @@
             "arms"
         ],
         "time": 120
+    },
+    "plank with dumbbell row": {
+        "description": "perform a plank, while alternating single arm rows",
+        "equipment": [
+            "dumbbell",
+            "mat"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "arms",
+            "abdominals"
+        ]
     }
 }

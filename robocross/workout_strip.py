@@ -20,7 +20,7 @@ class WorkoutStrip(GridWidget):
     progress_bar_style = 'background-color: rgb(0, 255, 0)'
     text_style = 'color: rgb(16, 16, 16)'
 
-    def __init__(self, workout: Workout, period: int):
+    def __init__(self, workout: Workout, period: int = 100):
         self.workout = workout
         self.period = period
         super(WorkoutStrip, self).__init__(self.title, margin=1)
@@ -32,7 +32,7 @@ class WorkoutStrip(GridWidget):
         self.timer: QTimer = QTimer()
         self.time: float = 0.0
         self.progress: float = 0.0
-        # self.sample_size: float = 1.0
+        self.running: bool = False
         self.setup_ui()
 
     def setup_ui(self):
@@ -43,11 +43,6 @@ class WorkoutStrip(GridWidget):
         self.timer.timeout.connect(self.update_progress)
         self.timer.setInterval(self.period)
         self.reset()
-
-    def resizeEvent(self, event):
-        new_size = event.size()
-        self.progress_label.setFixedWidth(int(new_size.width() * self.progress))
-        super().resizeEvent(event)
 
     @property
     def title(self) -> str:
@@ -62,6 +57,7 @@ class WorkoutStrip(GridWidget):
 
     def start(self):
         self.timer.start()
+        self.running = True
 
     def pause(self):
         self.timer.stop()
@@ -74,29 +70,18 @@ class WorkoutStrip(GridWidget):
             self.progress_label.setVisible(False)
             self.background.setStyleSheet(self.background_finished)
         else:
-            self.progress_label.setFixedWidth(self.size().width() * self.progress)
+            new_width  = int(self.size().width() * self.progress)
+            self.progress_label.setFixedWidth(new_width)
 
-
-
-class TestWorkoutStrip(WorkoutStrip):
-    party_time = Workout(
-        name="Party time",
-        description="Party time",
-        equipment=[],
-        intensity=Intensity.high,
-        aerobic_type=AerobicType.recovery,
-        target=[],
-        time=12,
-        )
-    def __init__(self):
-        super(TestWorkoutStrip, self).__init__(workout=self.party_time)
 
 if __name__ == "__main__":
-    from PySide6.QtWidgets import QApplication, QProgressBar
+    from PySide6.QtWidgets import QApplication
 
     app = QApplication(sys.argv)
-    widget = TestWorkoutStrip()
+    workout = Workout.default()
+    widget = WorkoutStrip(workout=Workout.default(), period=100)
     widget.show()
+    print(f"Start size is {widget.size().width()}")
     widget.start()
-    widget.resize(320, 20)
+    widget.resize(400, 20)
     app.exec()

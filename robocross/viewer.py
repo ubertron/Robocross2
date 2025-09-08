@@ -3,9 +3,11 @@ from __future__ import annotations
 import logging
 from collections import OrderedDict
 from datetime import timedelta
+import random
 
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QSizePolicy, QLabel
+from PySide6.QtWidgets import QSizePolicy, QLabel, QSplitter
 
 from core import logging_utils
 from core.core_enums import Alignment
@@ -18,7 +20,7 @@ from widgets.generic_widget import GenericWidget
 from widgets.scroll_widget import ScrollWidget
 from widgets.stopwatch import Stopwatch
 
-LOGGER = logging_utils.get_logger(name=__name__, level=logging.DEBUG)
+LOGGER = logging_utils.get_logger(name=__name__, level=logging.INFO)
 
 
 class Viewer(GenericWidget):
@@ -31,12 +33,18 @@ class Viewer(GenericWidget):
     def __init__(self):
         super(Viewer, self).__init__(title="Workout Viewer", margin=0, spacing=0)
         self.stopwatch: Stopwatch = self.add_widget(Stopwatch(period=self.period))
+        self.stopwatch.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self.workout_pane: GenericWidget = GenericWidget(margin=0, spacing=0)
         content_pane = self.add_widget(GenericWidget(alignment=Alignment.horizontal, margin=0, spacing=0))
-        scroll_widget: ScrollWidget = content_pane.add_widget(ScrollWidget())
+        splitter: QSplitter = content_pane.add_widget(QSplitter(Qt.Horizontal))
+        splitter.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
+        scroll_widget = ScrollWidget()
         scroll_widget.widget.add_widget(self.workout_pane)
-        scroll_widget.setFixedWidth(self.scroll_panel_width)
-        self.info_label: QLabel = content_pane.add_label()
+        self.info_label = QLabel()
+        self.info_label.setContentsMargins(20, 20, 20, 20)
+        splitter.addWidget(scroll_widget)
+        splitter.addWidget(self.info_label)
+        splitter.setSizes([125, 250])
         self.info_label.setStyleSheet("font-size: 24px;")
         self.info_label.setWordWrap(True)
         self.workout_list = []
@@ -44,7 +52,7 @@ class Viewer(GenericWidget):
         self.rest_time = 0
         self.current_index = 0
         self.started = False
-        self.mac_voice = MacVoice(voice=Voice.Samantha)
+        self.mac_voice = MacVoice(voice=random.choice([Voice.Samantha, Voice.Daniel]))
         self.run_mode = RunMode.paused
         self.setup_ui()
 
@@ -129,7 +137,7 @@ class Viewer(GenericWidget):
         hours_string = f"{hours} hour, " if hours > 0 else ""
         minutes_string = f"{minutes} minute, " if minutes else ""
         seconds_string = f"{seconds} second" if seconds else ""
-        string =  f"{hours_string}{minutes_string}{seconds_string}"
+        string =  f"{hours_string}{minutes_string}{seconds_string}".rstrip()
         return string[:-1] if string.endswith(",") else string
 
 
@@ -147,7 +155,7 @@ class Viewer(GenericWidget):
         self.started = True
         if args[0] != "00:00:00":
             self.current_index += 1
-        LOGGER.info(f"time reached: {args}")
+        LOGGER.debug(f"time reached: {args}")
         if self.current_index == len(self.workout_list):
             self.mac_voice.speak(line="workout complete")
             self.stopwatch.reset_button_clicked()
@@ -167,24 +175,26 @@ class Viewer(GenericWidget):
         """Play the workout."""
         if self.current_workout.name == REST_PERIOD:
             if self.next_workout is not None:
-                next_string = f"Next workout is {self.next_workout.name}"
+                next_string = f"Coming up: [[slnc 500]]{self.next_workout.name.title()}"
             else:
                 next_string = "End of workout coming up"
             speech = f"Rest time {self.current_workout.time} seconds.[[slnc 500]]{next_string}"
             self.mac_voice.speak(line=speech)
             self.info = (
-                f"<b>Rest Period</b><br />"
-                f"Duration: {self.current_workout.time} seconds<br /><br />{next_string}"
+                f"<span style='font-size:32pt'>Rest Period</span><br />"
+                f"<span style='font-style:italic'>Duration: {self.current_workout.time} seconds</span><br /><br />"
+                f"{next_string.replace('[[slnc 500]]', '')}"
             )
         else:
             if self.started:
                 speech = f"Starting {self.current_workout.name}"
                 self.mac_voice.speak(line=speech)
             self.workout_strips[self.current_index].start()
-            description = self.current_workout.description if self.current_workout.description else "(no details)"
+            description = f"{self.current_workout.description}." if self.current_workout.description else "(no details)"
             self.info = (
-                f"<b>{self.current_workout.name.title()}</b><br />"
-                f"Duration: {self.current_workout.time} seconds<br /><br />{description.capitalize()}"
+                f"<span style='font-size:32pt'>{self.current_workout.name.title()}</span><br />"
+                f"<span style='font-style:italic'>Duration: {self.current_workout.time} seconds</span><br /><br />"
+                f"{description.capitalize()}"
             )
 
     def setup_ui(self):
@@ -208,3 +218,8 @@ class Viewer(GenericWidget):
             self.pause_workout()
         else:
             self.play_workout()
+
+
+if __name__ == "__main__":
+    statement = "asdfasdf,"
+    print(statement[:-1] if statement.endswith(",") else statement)

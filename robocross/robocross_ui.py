@@ -114,10 +114,18 @@ class RoboCrossUI(GenericWidget):
         """Event for print button."""
         LOGGER.info(self.workout_report)
 
+    def resizeEvent(self, event):
+        """This method is called whenever the widget is resized."""
+        new_size = event.size()
+        old_size = event.oldSize()
+        LOGGER.debug(f"Widget resized from: {old_size.width()}x{old_size.height()} to: {new_size.width()}x{new_size.height()}")
+        super().resizeEvent(event)
+
 
 if __name__ == '__main__':
     from PySide6.QtWidgets import QApplication
     app = QApplication(sys.argv)
     widget = RoboCrossUI()
     widget.show()
+    widget.resize(900, 400)
     sys.exit(app.exec())

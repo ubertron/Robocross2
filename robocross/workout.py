@@ -51,3 +51,13 @@ class Workout:
 
     def __repr__(self):
         return f'{self.name} - time: {self.time} seconds'
+
+    @staticmethod
+    def default() -> Workout:
+        return Workout(name="default workout",
+                       description="default workout",
+                       equipment=[Equipment.mat, Equipment.medicine_ball],
+                       intensity=Intensity.low,
+                       aerobic_type=AerobicType.recovery,
+                       target=Target.full_body,
+                       time=8)

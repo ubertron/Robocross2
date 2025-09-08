@@ -23,14 +23,14 @@ class Stopwatch(GenericWidget):
     play_pause_clicked = Signal(RunMode)
     reset_clicked = Signal()
 
-    def __init__(self, period: int):
+    def __init__(self, period: int, font_size: int = 48):
         super().__init__(title="Stopwatch")
         self.period: int = period  # evaluation time for stopwatch
         button_bar = self.add_button_bar()
         self.play_pause_btn = button_bar.add_button("Play")
         self.reset_btn = button_bar.add_button("Reset")
         self.time_label = self.add_label("00:00:00")
-        font = QFont("Courier New", 32)
+        font = QFont("Courier New", font_size)
         self.time_label.setFont(font)
         self.elapsed = QTime(0, 0, 0)
         self.running = False
