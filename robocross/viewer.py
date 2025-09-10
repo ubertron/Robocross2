@@ -13,8 +13,8 @@ from PySide6.QtWidgets import QSizePolicy, QLabel, QSplitter
 from core.logging_utils import FileHandler, get_logger, StreamHandler
 from core.core_enums import Alignment
 from core.mac_voice import MacVoice, Voice
-from robocross import REST_PERIOD
-from robocross.robocross_enums import RunMode
+from robocross import REST_PERIOD, workout_strip
+from robocross.robocross_enums import AerobicType, RunMode, Intensity
 from robocross.workout import Workout
 from robocross.workout_strip import WorkoutStrip
 from widgets.generic_widget import GenericWidget
@@ -40,6 +40,7 @@ class Viewer(GenericWidget):
         content_pane = GenericWidget(alignment=Alignment.vertical, margin=0, spacing=0)
         self.stopwatch: Stopwatch = content_pane.add_widget(Stopwatch(period=self.period))
         self.stopwatch.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        self.workout_strip: WorkoutStrip = content_pane.add_widget(WorkoutStrip(self.rest_workout))
         self.info_label = content_pane.add_label()
         self.info_label.setContentsMargins(20, 20, 20, 20)
         splitter.addWidget(scroll_widget)
@@ -49,12 +50,21 @@ class Viewer(GenericWidget):
         self.info_label.setWordWrap(True)
         self.workout_list = []
         self.notification_dict = OrderedDict()
-        self.rest_time = 0
         self.current_index = 0
+        self.rest_time = 0
         self.started = False
         self.mac_voice = MacVoice(voice=random.choice([Voice.Samantha, Voice.Daniel]))
         self.run_mode = RunMode.paused
-        self.setup_ui()
+        self._setup_ui()
+
+    def _setup_ui(self):
+        self.stopwatch.time_reached.connect(self.advance_workout)
+        self.stopwatch.play_pause_clicked.connect(self.toggle_run_mode)
+        self.stopwatch.reset_clicked.connect(self.stopwatch_reset)
+        self.workout_strip.setFixedHeight(40)
+        self.workout_strip.setStyleSheet("font-size: 28px;")
+        self.workout_strip.time_reached.connect(self.rest_strip_time_reached)
+        self.workout_strip.setVisible(False)
 
     @property
     def current_index(self) -> int:
@@ -67,6 +77,10 @@ class Viewer(GenericWidget):
     @property
     def current_workout(self) -> Workout:
         return self.workout_list[self.current_index]
+
+    @property
+    def current_workout_strip(self) -> WorkoutStrip:
+        return self.workout_strips[self.current_index]
 
     @property
     def info(self):
@@ -85,12 +99,25 @@ class Viewer(GenericWidget):
         return self.workout_list[self.next_index] if self.next_index else None
 
     @property
+    def rest_workout(self) -> Workout:
+        return Workout(
+            name=REST_PERIOD,
+            description="Time to take a break",
+            equipment=[],
+            intensity=Intensity.low,
+            aerobic_type=AerobicType.recovery,
+            target=[],
+            time=0,
+        )
+
+    @property
     def rest_time(self) -> int:
         return self._rest_time
 
     @rest_time.setter
     def rest_time(self, value: int):
         self._rest_time = value
+        self.workout_strip.workout.time = value
 
     @property
     def workout_list(self) -> list[Workout] | None :
@@ -103,9 +130,10 @@ class Viewer(GenericWidget):
 
         # create the workout strips
         for workout in workout_list:
-            workout_strip = WorkoutStrip(workout=workout, period=self.period)
-            workout_strip.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
-            self.workout_pane.add_widget(workout_strip)
+            strip = WorkoutStrip(workout=workout, period=self.period)
+            strip.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
+            strip.setHidden(workout.name == REST_PERIOD)
+            self.workout_pane.add_widget(strip)
         self.workout_pane.add_stretch()
         self.notification_dict = OrderedDict()
         ref_time = timedelta(hours=0, minutes=0, seconds=0)
@@ -163,6 +191,7 @@ class Viewer(GenericWidget):
             self.info = f"{self.workout_length_nice} workout complete"
         else:
             self.workout_strips[self.current_index].start()
+            self.workout_strip.reset()
             self.play_workout()
 
     def pause_workout(self):
@@ -170,21 +199,30 @@ class Viewer(GenericWidget):
         speech = f"Pausing {self.current_workout.name}"
         self.mac_voice.speak(line=speech)
         self.info = "Paused"
+        self.workout_strip.timer.stop()
+        self.current_workout_strip.timer.stop()
 
     def play_workout(self):
         """Play the workout."""
+        self.workout_strip.workout = self.current_workout
+        self.workout_strip.setVisible(True)
+        self.workout_strip.start()
         if self.current_workout.name == REST_PERIOD:
-            if self.next_workout is not None:
-                next_string = f"Coming up: [[slnc 500]]{self.next_workout.name.title()}"
-            else:
+            if self.next_workout is None:
                 next_string = "End of workout coming up"
+                workout = self.current_workout
+                workout.name = "Stretching"
+                workout.description = "Time to stretch it out..."
+                self.workout_strip.workout = workout
+            else:
+                next_string = f"Coming up: [[slnc 500]]{self.next_workout.name.title()}"
             speech = f"Rest time {self.current_workout.time} seconds.[[slnc 500]]{next_string}"
             self.mac_voice.speak(line=speech)
             self.info = (
-                f"<span style='font-size:32pt'>Rest Period</span><br />"
                 f"<span style='font-style:italic'>Duration: {self.current_workout.time} seconds</span><br /><br />"
                 f"{next_string.replace('[[slnc 500]]', '')}"
             )
+            self.workout_strip.setVisible(True)
         else:
             if self.started:  # necessary to distinguish time reached trigger from play/pause trigger
                 speech = f"Starting {self.current_workout.name}"
@@ -192,21 +230,22 @@ class Viewer(GenericWidget):
             self.workout_strips[self.current_index].start()
             description = f"{self.current_workout.description}." if self.current_workout.description else "(no details)"
             self.info = (
-                f"<span style='font-size:32pt'>{self.current_workout.name.title()}</span><br />"
                 f"<span style='font-style:italic'>Duration: {self.current_workout.time} seconds</span><br /><br />"
                 f"{description.capitalize()}"
             )
 
-    def setup_ui(self):
-        self.stopwatch.time_reached.connect(self.advance_workout)
-        self.stopwatch.play_pause_clicked.connect(self.toggle_run_mode)
-        self.stopwatch.reset_clicked.connect(self.stopwatch_reset)
+    def rest_strip_time_reached(self):
+        """Event for rest strip."""
+        self.workout_strip.reset()
 
     def stopwatch_reset(self):
         """Stopwatch reset event."""
         for x in self.workout_strips:
             x.reset()
             x.timer.stop()
+        self.workout_strip.workout = self.workout_list[0]
+        self.workout_strip.reset()
+        self.workout_strip.timer.stop()
         self.current_index = 0
         self.started = False
         self.run_mode = RunMode.paused

@@ -20,10 +20,10 @@ from robocross.workout import Workout
 from robocross.robocross_enums import Equipment
 from widgets.generic_widget import GenericWidget
 
-log_path = Path(__file__).parents[1].joinpath("logs/workouts.log")
-file_handler = logging_utils.FileHandler(path=log_path, level=logging.DEBUG)
-stream_handler = logging_utils.StreamHandler(level=logging.INFO)
-LOGGER = logging_utils.get_logger(name=__name__, level=logging.INFO, handlers=[file_handler, stream_handler])
+LOG_PATH = Path(__file__).parents[1].joinpath("logs/workouts.log")
+FILE_HANDLER = logging_utils.FileHandler(path=LOG_PATH, level=logging.DEBUG)
+STREAM_HANDLER = logging_utils.StreamHandler(level=logging.INFO)
+LOGGER = logging_utils.get_logger(name=__name__, level=logging.INFO, handlers=[FILE_HANDLER, STREAM_HANDLER])
 VERSIONS = (
     VersionInfo(name=APP_NAME, version='1.0', codename='Alpha', info='Initial release'),
     VersionInfo(name=APP_NAME, version='2.0', codename='Colt Seavers', info='Revamp'),
@@ -72,7 +72,8 @@ class RoboCrossUI(GenericWidget):
 
     @property
     def equipment(self) -> list[Equipment]:
-        equipment = list({x.name.replace('_', ' ') for y in self.workout_list for x in y.equipment})
+        equipment = list({x.name.replace('_', ' ') for y in self.workout_list \
+                          for x in y.equipment if x is not None})
         equipment.sort(key=lambda x: x.lower())
         return equipment
 
@@ -93,6 +94,7 @@ class RoboCrossUI(GenericWidget):
         self._routine = routine
         workout_list = routine.get_workout_list(self.form.workout_type) if routine else []
         self.workout_list = workout_list
+        # self.viewer.rest_time = routine.rest_time if routine else 0
         self.viewer.info = "get ready..."
 
     @property
@@ -100,7 +102,7 @@ class RoboCrossUI(GenericWidget):
         return getpass.getuser()
 
     @property
-    def workout_list(self):
+    def workout_list(self) -> list[Workout]:
         return self._workout_list
 
     @workout_list.setter

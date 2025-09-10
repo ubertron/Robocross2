@@ -1,7 +1,7 @@
 import logging
 import sys
 
-from PySide6.QtCore import QTimer, Qt, QElapsedTimer, QEvent
+from PySide6.QtCore import QTimer, Qt, QElapsedTimer, QEvent, Signal
 from PySide6.QtWidgets import QProgressBar, QSizePolicy
 
 from robocross.workout import Workout
@@ -20,17 +20,17 @@ class WorkoutStrip(GridWidget):
     background_finished = 'background-color: rgb(216, 216, 216)'
     progress_bar_style = 'background-color: rgb(0, 255, 0)'
     text_style = 'color: rgb(16, 16, 16)'
+    time_reached: Signal = Signal()
 
     def __init__(self, workout: Workout, period: int = 100):
-        self.workout = workout
         self.period = period
-        super(WorkoutStrip, self).__init__(self.title, margin=1)
+        super(WorkoutStrip, self).__init__(workout.name, margin=1)
         self.background = self.add_label('', row=0, column=0)
         self.background.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Preferred)
         self.progress_label: QLabel = self.add_label('', row=0, column=0)
-        self.label = self.add_label(f"{workout.name.title()}", row=0, column=0)
-        self.label.setToolTip(workout.description)
+        self.label = self.add_label(text="", row=0, column=0)
         self.timer: QTimer = QTimer()
+        self.workout = workout
         self.time: float = 0.0
         self.progress: float = 0.0
         self.running: bool = False
@@ -70,9 +70,21 @@ class WorkoutStrip(GridWidget):
             self.timer.stop()
             self.progress_label.setVisible(False)
             self.background.setStyleSheet(self.background_finished)
+            self.time_reached.emit()
         else:
             new_width  = int(self.size().width() * self.progress)
             self.progress_label.setFixedWidth(new_width)
+
+    @property
+    def workout(self):
+        return self._workout
+
+    @workout.setter
+    def workout(self, workout: Workout):
+        self._workout = workout
+        self.setWindowTitle(workout.name)
+        self.label.setText(workout.name.title())
+        self.label.setToolTip(workout.description)
 
 
 if __name__ == "__main__":

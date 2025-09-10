@@ -145,7 +145,7 @@ class WorkoutData:
                 Workout(
                     name=name,
                     description=value.get("description"),
-                    equipment=equipment_list,
+                    equipment=equipment_list if equipment_list else [],
                     intensity=Intensity.__members__.get(value.get("intensity")),
                     aerobic_type=AerobicType.__members__.get(value.get("aerobic_type")),
                     target=target_list,

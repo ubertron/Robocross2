@@ -254,7 +254,7 @@
     "weighted punches": {
         "description": "continuous punches forward holding weights",
         "equipment": [
-            "dumbbell"
+            "hand_weight"
         ],
         "intensity": "high",
         "aerobic_type": "cardio",

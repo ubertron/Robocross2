@@ -9,7 +9,7 @@ from robocross.robocross_enums import Equipment, Intensity, AerobicType, Target
 class Workout:
     name: str
     description: str
-    equipment: list[Equipment]
+    equipment: list[Equipment] | None
     intensity: Intensity
     aerobic_type: AerobicType
     target: list[Target]
