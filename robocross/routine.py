@@ -5,13 +5,15 @@ import random
 from core.logging_utils import get_logger
 from robocross.workout_data import WorkoutData
 from robocross import REST_PERIOD, WorkoutType
-from robocross.workout import Workout, AerobicType, Intensity, Equipment
+from robocross.workout import Workout
+from robocross.robocross_enums import Equipment, Intensity, AerobicType
 
 LOGGER = get_logger(name=__name__, level=logging.DEBUG)
 
 
 class Routine:
-    def __init__(self, interval: int = 120, workout_length: int = 35, rest_time: int = 30, nope_list: list = ()):
+    def __init__(self, interval: int = 120, workout_length: int = 35, rest_time: int = 30, nope_list: list = (),
+                 equipment_filter: list[Equipment] = ()):
         """
         Workout Routine
         :param interval: seconds
@@ -22,7 +24,8 @@ class Routine:
         self.workout_length = workout_length
         self.minimum_rest_time = rest_time
         self.nope_list = nope_list
-        self.workout_data: WorkoutData = WorkoutData(filter_list=self.nope_list)
+        self.equipment_filter = equipment_filter
+        self.workout_data: WorkoutData = WorkoutData(nope_list=self.nope_list, equipment_filter=self.equipment_filter)
 
     def __repr__(self) -> str:
         return f"Routine | interval: {self.interval}, workout_length: {self.workout_length}, rest_time: {self.rest_time}"
@@ -44,22 +47,30 @@ class Routine:
         workout_items = []
         for i in range(self.workout_count):
             item_list = self.workout_data.cardio_workout_items if i % 2 == 0 else self.workout_data.strength_workout_items
+            if not item_list:
+                return []
             workout_items.append(random.choice(item_list))
-        return self.build_routine(workout_items)
+        return self.build_routine(workout_items) if workout_items else None
 
     @property
     def cardio_workout(self) -> list[Workout]:
-        return self.build_routine(
-            [random.choice(self.workout_data.cardio_workout_items) for _ in range(self.workout_count)])
+        if self.workout_data.cardio_workout_items:
+            return self.build_routine(
+                [random.choice(self.workout_data.cardio_workout_items) for _ in range(self.workout_count)])
+        return []
 
     @property
     def strength_workout(self) -> list[Workout]:
-        return self.build_routine(
-            [random.choice(self.workout_data.strength_workout_items) for _ in range(self.workout_count)])
+        if self.workout_data.strength_workout_items:
+            return self.build_routine(
+                [random.choice(self.workout_data.strength_workout_items) for _ in range(self.workout_count)])
+        return []
 
     @property
     def random_workout(self) -> list[Workout]:
-        return self.build_routine([random.choice(self.workout_data.workouts) for _ in range(self.workout_count)])
+        if self.workout_data.workouts:
+            return self.build_routine([random.choice(self.workout_data.workouts) for _ in range(self.workout_count)])
+        return []
 
     @property
     def test_workout(self) -> list[Workout]:
@@ -75,21 +86,23 @@ class Routine:
         ]
 
     def build_routine(self, workouts: list[Workout]):
-        workout_list = []
-        rest_period = Workout(
-            name=REST_PERIOD,
-            description="Take a break",
-            equipment=[],
-            intensity=Intensity.low,
-            aerobic_type=AerobicType.recovery,
-            target=[],
-            time=self.rest_time,
-        )
-        for workout in workouts:
-            workout.time = self.interval
-            workout_list.append(workout)
-            workout_list.append(rest_period)
-        return workout_list
+        if workouts:
+            workout_list = []
+            rest_period = Workout(
+                name=REST_PERIOD,
+                description="Take a break",
+                equipment=[],
+                intensity=Intensity.low,
+                aerobic_type=AerobicType.recovery,
+                target=[],
+                time=self.rest_time,
+            )
+            for workout in workouts:
+                workout.time = self.interval
+                workout_list.append(workout)
+                workout_list.append(rest_period)
+            return workout_list
+        return []
 
     def get_workout_list(self, workout_type: WorkoutType) -> list[Workout]:
         """Get workout list by workout type."""

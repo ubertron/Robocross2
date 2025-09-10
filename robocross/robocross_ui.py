@@ -4,36 +4,39 @@ from __future__ import annotations
 import getpass
 import logging
 import sys
-
 from datetime import datetime
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLineEdit, QSpinBox, QLabel, QSizePolicy, QTabWidget
+from pathlib import Path
 
-from core.core_enums import Position
-from core.logging_utils import get_logger
-from robocross import WorkoutType, REST_PERIOD
-from robocross.routine import Routine
+from PySide6.QtCore import QSettings, QSize
+from PySide6.QtWidgets import QTabWidget
+
+from core import DEVELOPER, logging_utils
+from core.version_info import VersionInfo
+from robocross import APP_NAME, REST_PERIOD
 from robocross.parameters_widget import ParametersWidget
-from robocross.workout import Workout, Equipment
-from robocross.workout_form import WorkoutForm
+from robocross.routine import Routine
 from robocross.viewer import Viewer
-from widgets import form_widget
+from robocross.workout import Workout
+from robocross.robocross_enums import Equipment
 from widgets.generic_widget import GenericWidget
-from widgets.panel_widget import PanelWidget
 
-
-LOGGER: logging.Logger = get_logger(name=__name__, level=logging.DEBUG)
-
+log_path = Path(__file__).parents[1].joinpath("logs/workouts.log")
+file_handler = logging_utils.FileHandler(path=log_path, level=logging.DEBUG)
+stream_handler = logging_utils.StreamHandler(level=logging.INFO)
+LOGGER = logging_utils.get_logger(name=__name__, level=logging.INFO, handlers=[file_handler, stream_handler])
+VERSIONS = (
+    VersionInfo(name=APP_NAME, version='1.0', codename='Alpha', info='Initial release'),
+    VersionInfo(name=APP_NAME, version='2.0', codename='Colt Seavers', info='Revamp'),
+)
 
 class RoboCrossUI(GenericWidget):
-    name = 'RoboCross'
-    version = '2.0'
-    codename = 'dragonfly'
-    title = f'{name} v{version} [{codename}]'
+    app_size_key = "app_size"
+    default_size = QSize(800, 400)
     minimum_width = 640
 
     def __init__(self, parent=None):
-        super(RoboCrossUI, self).__init__(title=self.title, parent=parent)
+        super(RoboCrossUI, self).__init__(title=VERSIONS[-1].title, parent=parent)
+        self.settings = QSettings(DEVELOPER, APP_NAME)
         self.tab_widget = self.add_widget(QTabWidget())
         self.parameters_widget: ParametersWidget = ParametersWidget()
         self.form = self.parameters_widget.form
@@ -41,8 +44,10 @@ class RoboCrossUI(GenericWidget):
         self.viewer: Viewer = Viewer()
         self.tab_widget.addTab(self.viewer, 'Workout')
         self.routine = None
+        self.info = ""
         self.workout_list = []
         self.parameters_widget.info = "Build your workout..."
+        self.app_size = self.settings.value(self.app_size_key, self.default_size)
         self.setup_ui()
 
     def setup_ui(self):
@@ -50,6 +55,16 @@ class RoboCrossUI(GenericWidget):
         self.parameters_widget.print_button_clicked.connect(self.print_button_clicked)
         self.setMinimumWidth(self.minimum_width)
         self.viewer.stopwatch.play_pause_btn.setEnabled(False)
+        self.resize(self.app_size)
+
+    @property
+    def app_size(self) -> QSize:
+        return self._app_size
+
+    @app_size.setter
+    def app_size(self, value: QSize):
+        self._app_size = value
+        self.settings.setValue(self.app_size_key, value)
 
     @property
     def date_time_string(self) -> str:
@@ -102,13 +117,21 @@ class RoboCrossUI(GenericWidget):
 
     def build_button_clicked(self):
         """Create the routine."""
-        self.routine = Routine(
-            interval=self.form.interval,
-            workout_length=self.form.length,
-            rest_time=self.form.rest_time,
-            nope_list=self.form.nope_list,
-        )
-        self.viewer.stopwatch.play_pause_btn.setEnabled(True)
+        if self.parameters_widget.zero_equipment:
+            self.parameters_widget.info = "No equipment selected.\nJust go for a run or something..."
+        else:
+            self.routine = Routine(
+                interval=self.form.interval,
+                workout_length=self.form.length,
+                rest_time=self.form.rest_time,
+                nope_list=self.form.nope_list,
+                equipment_filter=self.parameters_widget.equipment_filter,
+            )
+            if self.workout_list:
+                self.viewer.stopwatch.play_pause_btn.setEnabled(True)
+                LOGGER.info(self.workout_report)
+            else:
+                self.parameters_widget.info = "No workouts found.\nPlease select more equipment."
 
     def print_button_clicked(self):
         """Event for print button."""
@@ -119,13 +142,21 @@ class RoboCrossUI(GenericWidget):
         new_size = event.size()
         old_size = event.oldSize()
         LOGGER.debug(f"Widget resized from: {old_size.width()}x{old_size.height()} to: {new_size.width()}x{new_size.height()}")
+        self.app_size = new_size
         super().resizeEvent(event)
 
 
 if __name__ == '__main__':
     from PySide6.QtWidgets import QApplication
+    from PySide6.QtCore import QCoreApplication, Qt
+    from PySide6.QtGui import QPixmap
+
+    from core.core_paths import image_path
+
+    QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
     app = QApplication(sys.argv)
+    app.setWindowIcon(QPixmap(image_path("robocross.png").as_posix()))
+    app.setApplicationDisplayName(APP_NAME)
     widget = RoboCrossUI()
     widget.show()
-    widget.resize(900, 400)
     sys.exit(app.exec())

@@ -1,12 +1,20 @@
 """Workout data."""
 import hashlib
 import json
+
 from pathlib import Path
 from datetime import datetime
+from typing import Sequence
 
-from robocross.workout import Workout, Equipment, Intensity, AerobicType, Target
+from core.logging_utils import get_logger
+from robocross.workout import Workout
+from robocross.robocross_enums import Equipment, Intensity, AerobicType, Target
 from robocross import DATA_FILE_PATH
+
+
 DEFAULT_TIME = 120
+LOGGER = get_logger(__name__)
+
 
 WORKOUTS: tuple[Workout] = (
     Workout(name="shuttle runs with medicine ball", description="", equipment=[Equipment.medicine_ball],
@@ -89,7 +97,7 @@ def generate_hash(text: str) -> str:
 
 def convert_to_data_file():
 
-    print(DATA_FILE_PATH)
+    # print(DATA_FILE_PATH)
     data_dict = {}
     for workout in WORKOUTS:
         data_dict[workout.name] = {
@@ -100,36 +108,50 @@ def convert_to_data_file():
             "target": [x.name for x in list(workout.target)],
             "time": workout.time,
         }
-    for key, value in data_dict.items():
-        print(f"{key}: {value}")
     with DATA_FILE_PATH.open("w") as f:
         json.dump(data_dict, f, indent=4)
 
 
 class WorkoutData:
-    def __init__(self, filter_list: tuple = ()):
+    def __init__(self, nope_list: Sequence[str] = (), equipment_filter: Sequence[Equipment] = ()):
+        """Initialize the workout data.
+        Args:
+            nope_list (Sequence): The list of workout items to omit.
+            equipment_filter (Sequence[Equipment]): The list of equipment items to omit.
+            """
         with DATA_FILE_PATH.open("r") as f:
             self.data = json.load(f)
-        self.filter_list = filter_list
+        self.nope_list = nope_list
+        self.equipment_filter = equipment_filter
+
+    @property
+    def filtered_data(self) -> dict:
+        """Data with items removed."""
+        filtered = {}
+        for name, value in self.data.items():
+            if name not in self.nope_list:
+                equipment_list = [Equipment.__members__.get(x) for x in value.get("equipment")]
+                if bool(set(equipment_list).intersection(set(self.equipment_filter))) is False:
+                    filtered[name] = value
+        return filtered
 
     @property
     def workouts(self) -> list[Workout]:
         workouts = []
-        for name, value in self.data.items():
-            if name not in self.filter_list:
-                equipment_list = [Equipment.__members__.get(x) for x in value.get("equipment")]
-                target_list = [Target.__members__.get(x) for x in value.get("target")]
-                workouts.append(
-                    Workout(
-                        name=name,
-                        description=value.get("description"),
-                        equipment=equipment_list,
-                        intensity=Intensity.__members__.get(value.get("intensity")),
-                        aerobic_type=AerobicType.__members__.get(value.get("aerobic_type")),
-                        target=target_list,
-                        time=DEFAULT_TIME,
-                    )
+        for name, value in self.filtered_data.items():
+            equipment_list = [Equipment.__members__.get(x) for x in value.get("equipment")]
+            target_list = [Target.__members__.get(x) for x in value.get("target")]
+            workouts.append(
+                Workout(
+                    name=name,
+                    description=value.get("description"),
+                    equipment=equipment_list,
+                    intensity=Intensity.__members__.get(value.get("intensity")),
+                    aerobic_type=AerobicType.__members__.get(value.get("aerobic_type")),
+                    target=target_list,
+                    time=DEFAULT_TIME,
                 )
+            )
         return workouts
 
     @property
@@ -143,5 +165,6 @@ class WorkoutData:
 
 if __name__ == "__main__":
     convert_to_data_file()
-    for x in WorkoutData().cardio_workout_items:
-        print(x)
+    equipment_filter = [Equipment.mat, Equipment.kettle_bell, Equipment.dumbbell]
+    for x in WorkoutData(nope_list=["oblique twist"], equipment_filter=equipment_filter).strength_workout_items:
+        print(x.name, x.equipment)

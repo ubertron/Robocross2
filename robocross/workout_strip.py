@@ -4,7 +4,8 @@ import sys
 from PySide6.QtCore import QTimer, Qt, QElapsedTimer, QEvent
 from PySide6.QtWidgets import QProgressBar, QSizePolicy
 
-from robocross.workout import Workout, AerobicType, Intensity
+from robocross.workout import Workout
+from robocross.robocross_enums import Intensity, AerobicType
 from robocross import REST_PERIOD
 from widgets.grid_widget import GridWidget
 from core.logging_utils import get_logger

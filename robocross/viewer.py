@@ -3,13 +3,14 @@ from __future__ import annotations
 import logging
 from collections import OrderedDict
 from datetime import timedelta
+from pathlib import Path
 import random
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QSizePolicy, QLabel, QSplitter
 
-from core import logging_utils
+from core.logging_utils import FileHandler, get_logger, StreamHandler
 from core.core_enums import Alignment
 from core.mac_voice import MacVoice, Voice
 from robocross import REST_PERIOD
@@ -20,8 +21,7 @@ from widgets.generic_widget import GenericWidget
 from widgets.scroll_widget import ScrollWidget
 from widgets.stopwatch import Stopwatch
 
-LOGGER = logging_utils.get_logger(name=__name__, level=logging.INFO)
-
+LOGGER = get_logger(name=__name__)
 
 class Viewer(GenericWidget):
     """Widget to run workouts"""
@@ -32,18 +32,18 @@ class Viewer(GenericWidget):
 
     def __init__(self):
         super(Viewer, self).__init__(title="Workout Viewer", margin=0, spacing=0)
-        self.stopwatch: Stopwatch = self.add_widget(Stopwatch(period=self.period))
-        self.stopwatch.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self.workout_pane: GenericWidget = GenericWidget(margin=0, spacing=0)
-        content_pane = self.add_widget(GenericWidget(alignment=Alignment.horizontal, margin=0, spacing=0))
-        splitter: QSplitter = content_pane.add_widget(QSplitter(Qt.Horizontal))
+        splitter: QSplitter = self.add_widget(QSplitter(Qt.Horizontal))
         splitter.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
         scroll_widget = ScrollWidget()
         scroll_widget.widget.add_widget(self.workout_pane)
-        self.info_label = QLabel()
+        content_pane = GenericWidget(alignment=Alignment.vertical, margin=0, spacing=0)
+        self.stopwatch: Stopwatch = content_pane.add_widget(Stopwatch(period=self.period))
+        self.stopwatch.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
+        self.info_label = content_pane.add_label()
         self.info_label.setContentsMargins(20, 20, 20, 20)
         splitter.addWidget(scroll_widget)
-        splitter.addWidget(self.info_label)
+        splitter.addWidget(content_pane)
         splitter.setSizes([125, 250])
         self.info_label.setStyleSheet("font-size: 24px;")
         self.info_label.setWordWrap(True)
@@ -186,7 +186,7 @@ class Viewer(GenericWidget):
                 f"{next_string.replace('[[slnc 500]]', '')}"
             )
         else:
-            if self.started:
+            if self.started:  # necessary to distinguish time reached trigger from play/pause trigger
                 speech = f"Starting {self.current_workout.name}"
                 self.mac_voice.speak(line=speech)
             self.workout_strips[self.current_index].start()
