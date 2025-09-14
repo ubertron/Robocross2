@@ -1,6 +1,6 @@
 {
-    "shuttle runs with medicine ball": {
-        "description": "",
+    "shuttle runs with medicine ball throw": {
+        "description": "throw the medicine ball to the other end following each shuttle",
         "equipment": [
             "medicine_ball"
         ],
@@ -11,8 +11,31 @@
         ],
         "time": 120
     },
+    "shuttle runs with weight swap": {
+        "description": "at the end of each shuttle, swap to a different heavy object",
+        "equipment": [
+            "medicine_ball",
+            "dumbbell"
+        ],
+        "intensity": "high",
+        "aerobic_type": "cardio",
+        "target": [
+            "full_body"
+        ],
+        "time": 120
+    },
     "spot running": {
-        "description": "",
+        "description": "run on the spot - optionally, you can hold weights.",
+        "equipment": [],
+        "intensity": "high",
+        "aerobic_type": "cardio",
+        "target": [
+            "full_body"
+        ],
+        "time": 120
+    },
+    "high knees": {
+        "description": "alternate high knees - optionally, you can hold weights.",
         "equipment": [],
         "intensity": "high",
         "aerobic_type": "cardio",
@@ -22,7 +45,7 @@
         "time": 120
     },
     "reverse flies standing": {
-        "description": "",
+        "description": "stand bending forward, raise weights laterally",
         "equipment": [
             "dumbbell"
         ],
@@ -34,7 +57,7 @@
         "time": 120
     },
     "jumping jacks": {
-        "description": "",
+        "description": "standing up straight, jump to star posture, then back to straight",
         "equipment": [],
         "intensity": "high",
         "aerobic_type": "cardio",
@@ -153,7 +176,7 @@
         ],
         "time": 120
     },
-    "curl + press": {
+    "curl and press": {
         "description": "standing curl with shoulder press",
         "equipment": [
             "dumbbell"
@@ -277,6 +300,42 @@
     },
     "shoulder press": {
         "description": "standing up, hold dumbbells at shoulder level and raise vertically",
+        "equipment": [
+            "dumbbell"
+        ],
+        "intensity": "high",
+        "aerobic_type": "strength",
+        "target": [
+            "shoulders",
+            "arms"
+        ],
+        "time": 120
+    },
+    "squat thrusts": {
+        "description": "bent forward with hands on the ground, jump out, then back in",
+        "equipment": [],
+        "intensity": "high",
+        "aerobic_type": "strength",
+        "target": [
+            "full_body"
+        ],
+        "time": 120
+    },
+    "lateral raises": {
+        "description": "standing up, raise dumbbells laterally",
+        "equipment": [
+            "dumbbell"
+        ],
+        "intensity": "high",
+        "aerobic_type": "strength",
+        "target": [
+            "shoulders",
+            "arms"
+        ],
+        "time": 120
+    },
+    "front raises": {
+        "description": "standing up, raise dumbbells to the front",
         "equipment": [
             "dumbbell"
         ],

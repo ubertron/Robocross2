@@ -29,6 +29,10 @@ class Viewer(GenericWidget):
     end_notification: str = "end of workout"
     scroll_panel_width: int = 240
     period = 50  # evaluation time for timers
+    typeface = "Futura"
+    default_info_font = QFont(typeface, 32)
+    default_workout_strip_font = QFont(typeface, 28)
+    default_stopwatch_height = 40
 
     def __init__(self):
         super(Viewer, self).__init__(title="Workout Viewer", margin=0, spacing=0)
@@ -41,18 +45,20 @@ class Viewer(GenericWidget):
         self.stopwatch: Stopwatch = content_pane.add_widget(Stopwatch(period=self.period))
         self.stopwatch.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self.workout_strip: WorkoutStrip = content_pane.add_widget(WorkoutStrip(self.rest_workout))
+        self.workout_strip_font = self.default_workout_strip_font
         self.info_label = content_pane.add_label()
         self.info_label.setContentsMargins(20, 20, 20, 20)
         splitter.addWidget(scroll_widget)
         splitter.addWidget(content_pane)
         splitter.setSizes([125, 250])
-        self.info_label.setStyleSheet("font-size: 24px;")
+        self.info_font = self.default_info_font
         self.info_label.setWordWrap(True)
         self.workout_list = []
         self.notification_dict = OrderedDict()
         self.current_index = 0
         self.rest_time = 0
         self.started = False
+        self.stopwatch_started = self.default_stopwatch_height
         self.mac_voice = MacVoice(voice=random.choice([Voice.Samantha, Voice.Daniel]))
         self.run_mode = RunMode.paused
         self._setup_ui()
@@ -61,8 +67,7 @@ class Viewer(GenericWidget):
         self.stopwatch.time_reached.connect(self.advance_workout)
         self.stopwatch.play_pause_clicked.connect(self.toggle_run_mode)
         self.stopwatch.reset_clicked.connect(self.stopwatch_reset)
-        self.workout_strip.setFixedHeight(40)
-        self.workout_strip.setStyleSheet("font-size: 28px;")
+        # self.workout_strip.setFixedHeight(sel)
         self.workout_strip.time_reached.connect(self.rest_strip_time_reached)
         self.workout_strip.setVisible(False)
 
@@ -89,6 +94,15 @@ class Viewer(GenericWidget):
     @info.setter
     def info(self, value: str):
         self.info_label.setText(value)
+
+    @property
+    def info_font(self) -> QFont:
+        return self._info_font
+
+    @info_font.setter
+    def info_font(self, font: QFont):
+        self._info_font = font
+        self.info_label.setFont(font)
 
     @property
     def next_index(self) -> int | None:
@@ -118,6 +132,15 @@ class Viewer(GenericWidget):
     def rest_time(self, value: int):
         self._rest_time = value
         self.workout_strip.workout.time = value
+
+    @property
+    def stopwatch_height(self) -> int:
+        return self._stopwatch_height
+
+    @stopwatch_height.setter
+    def stopwatch_height(self, height: int):
+        self._stopwatch_height = height
+        self.stopwatch.setFixedHeight(height)
 
     @property
     def workout_list(self) -> list[Workout] | None :
@@ -151,6 +174,16 @@ class Viewer(GenericWidget):
     @property
     def workout_strips(self) -> list[WorkoutStrip]:
         return self.workout_pane.widgets
+
+    @property
+    def workout_strip_font(self) ->QFont:
+        return self._workout_strip_font
+
+    @workout_strip_font.setter
+    def workout_strip_font(self, font: QFont):
+        self._workout_strip_font = font
+        self.workout_strip.label.setFont(font)
+
 
     @property
     def workout_length(self) -> float:

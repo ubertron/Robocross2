@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import QSettings, QSize
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QTabWidget
 
 from core import DEVELOPER, logging_utils
@@ -33,6 +34,7 @@ class RoboCrossUI(GenericWidget):
     app_size_key = "app_size"
     default_size = QSize(800, 400)
     minimum_width = 640
+    type_face = "Futura"
 
     def __init__(self, parent=None):
         super(RoboCrossUI, self).__init__(title=VERSIONS[-1].title, parent=parent)
@@ -65,6 +67,10 @@ class RoboCrossUI(GenericWidget):
     def app_size(self, value: QSize):
         self._app_size = value
         self.settings.setValue(self.app_size_key, value)
+        self.viewer.info_font = QFont(self.type_face, int(value.width() / 32))
+        self.viewer.workout_strip_font = QFont(self.type_face, int(value.height() / 16))
+        self.viewer.workout_strip.setFixedHeight(int(value.height() / 10))
+        self.viewer.stopwatch_height = int(value.height() / 5)
 
     @property
     def date_time_string(self) -> str:
