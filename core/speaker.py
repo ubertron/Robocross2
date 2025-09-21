@@ -1,4 +1,5 @@
 """Text to speech mac-only"""
+from __future__ import annotations
 
 import logging
 import os
@@ -7,9 +8,12 @@ import random
 from enum import Enum, unique, auto
 from pathlib import Path
 from typing import Optional
+from subprocess import Popen
+from PySide6.QtCore import Signal, QObject
+from PySide6.QtWidgets import QWidget
 
 from core.logging_utils import get_logger
-GERGER = get_logger(name=__name__, level=logging.DEBUG)
+LOGGER = get_logger(name=__name__, level=logging.DEBUG)
 
 
 class Voice(Enum):
@@ -65,25 +69,34 @@ class Voice(Enum):
         return len(self.names())
 
 
-class MacVoice:
-    def __init__(self, voice: Optional[Voice] = None):
+class Speaker(QObject):
+    speaking_finished = Signal()
+
+    def __init__(self, voice: Optional[Voice] = None, parent: QWidget | None = None):
+        super().__init__(parent=parent)
         self.voice: str = voice.name.replace("_", "-") if voice else random.choice(Voice.names())
 
-    def speak(self, line: str):
-        """Text to speech
+    def speak(self, text: str):
+        """Text to speech.
 
-        add '[[slnc 500]]' to line string to include a pause of 500 ms
+        add '[[slnc 500]]' to text string to include a pause of 500 ms
         """
-        os.system(f'say -v {self.voice} "{line}"')
+        process = Popen(['say', '-v', self.voice, text])
+        process.wait()
+        self.speaking_finished.emit()
 
-    def save(self, line: str, file_path: Optional[Path] = None):
+    def save(self, text: str, file_path: Optional[Path] = None):
         if not file_path:
-            file_path = Path(f'{line}.aiff')
+            file_path = Path(f'{text}.aiff')
         file_path.parent.mkdir(parents=True, exist_ok=True)
-        os.system(f'say -o "{file_path.absolute()}" -v {self.voice} "{line}"')
+        Popen(['say', '-o', file_path.absolute(), '-v', self.voice, text])
         return file_path.resolve()
 
 
 if __name__ == "__main__":
-    _voice = MacVoice(voice=Voice.Samantha)
-    _voice.say("This is a sentence.")
+    line = "This is a sentence."
+    _voice = Speaker(voice=Voice.Samantha)
+    _voice.speaking_finished.connect(lambda: print("Finished speaking"))
+    _voice.speak(text=line)
+    result = _voice.save(text=line, file_path=Path("test.aiff"))
+    print(result)

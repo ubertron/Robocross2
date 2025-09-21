@@ -40,8 +40,8 @@ class GenericWidget(QWidget):
         """Add label to the layout"""
         alignment: Qt.AlignmentFlag = {
             position.center: Qt.AlignmentFlag.AlignCenter,
-            position.left: Qt.AlignmentFlag.AlignLeft,
-            position.right: Qt.AlignmentFlag.AlignRight,
+            position.left: Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+            position.right: Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
         }
         return self.add_widget(QLabel(text, alignment=alignment[position]))
 
@@ -53,9 +53,9 @@ class GenericWidget(QWidget):
             button.clicked.connect(clicked)
         return self.add_widget(button)
 
-    def add_button_bar(self) -> ButtonBar:
+    def add_button_bar(self, spacing: int = 2) -> ButtonBar:
         """Add button bar"""
-        button_bar = self.add_widget(ButtonBar())
+        button_bar = self.add_widget(ButtonBar(spacing=spacing))
         return button_bar
 
     def add_panel(self, widget: QWidget) -> tuple[PanelWidget, QWidget]:

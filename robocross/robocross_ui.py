@@ -13,7 +13,7 @@ from PySide6.QtWidgets import QTabWidget
 
 from core import DEVELOPER, logging_utils
 from core.version_info import VersionInfo
-from robocross import APP_NAME, REST_PERIOD
+from robocross import APP_NAME, REST_PERIOD, SANS_SERIF_FONT, CODE_FONT
 from robocross.parameters_widget import ParametersWidget
 from robocross.routine import Routine
 from robocross.viewer import Viewer
@@ -30,14 +30,13 @@ VERSIONS = (
     VersionInfo(name=APP_NAME, version='2.0', codename='Colt Seavers', info='Revamp'),
 )
 
-class RoboCrossUI(GenericWidget):
+class Robocross(GenericWidget):
     app_size_key = "app_size"
     default_size = QSize(800, 400)
     minimum_width = 640
-    type_face = "Futura"
 
     def __init__(self, parent=None):
-        super(RoboCrossUI, self).__init__(title=VERSIONS[-1].title, parent=parent)
+        super(Robocross, self).__init__(title=VERSIONS[-1].title, parent=parent)
         self.settings = QSettings(DEVELOPER, APP_NAME)
         self.tab_widget = self.add_widget(QTabWidget())
         self.parameters_widget: ParametersWidget = ParametersWidget()
@@ -67,10 +66,12 @@ class RoboCrossUI(GenericWidget):
     def app_size(self, value: QSize):
         self._app_size = value
         self.settings.setValue(self.app_size_key, value)
-        self.viewer.info_font = QFont(self.type_face, int(value.width() / 32))
-        self.viewer.workout_strip_font = QFont(self.type_face, int(value.height() / 16))
-        self.viewer.workout_strip.setFixedHeight(int(value.height() / 10))
-        self.viewer.stopwatch_height = int(value.height() / 5)
+        self.viewer.info_font = QFont(SANS_SERIF_FONT, int(value.width() / 32))
+        self.viewer.progress_bar_font = QFont(SANS_SERIF_FONT, int(value.height() / 16))
+        self.viewer.progress_bar.setFixedHeight(int(value.height() / 10))
+        self.viewer.stopwatch_height = int(value.height() / 4)
+        self.viewer.stopwatch_font = QFont(CODE_FONT, int(value.height() / 6))
+        self.viewer.workout_chip_font = QFont(SANS_SERIF_FONT, int(value.height() / 16))
 
     @property
     def date_time_string(self) -> str:
@@ -100,7 +101,6 @@ class RoboCrossUI(GenericWidget):
         self._routine = routine
         workout_list = routine.get_workout_list(self.form.workout_type) if routine else []
         self.workout_list = workout_list
-        # self.viewer.rest_time = routine.rest_time if routine else 0
         self.viewer.info = "get ready..."
 
     @property
@@ -165,6 +165,6 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.setWindowIcon(QPixmap(image_path("robocross.png").as_posix()))
     app.setApplicationDisplayName(APP_NAME)
-    widget = RoboCrossUI()
+    widget = Robocross()
     widget.show()
     sys.exit(app.exec())

@@ -9,8 +9,9 @@ from PySide6.QtCore import QTimer, QTime, Qt, Signal
 from PySide6.QtGui import QFont
 
 from collections import OrderedDict
-from core.mac_voice import MacVoice, Voice
+from core.speaker import Speaker, Voice
 from core.logging_utils import get_logger
+from robocross import CODE_FONT
 from robocross.robocross_enums import RunMode
 from widgets.generic_widget import GenericWidget
 
@@ -22,31 +23,39 @@ class Stopwatch(GenericWidget):
     time_reached = Signal(str, str)  # emit time + message
     play_pause_clicked = Signal(RunMode)
     reset_clicked = Signal()
+    default_time_font = QFont(CODE_FONT, 48)
 
-    def __init__(self, period: int, font_size: int = 48):
+    def __init__(self, period: int):
         super().__init__(title="Stopwatch")
+        self.targets: OrderedDict[str, str] = {}  # time -> spoken message
+        self.completed_targets = []
         self.period: int = period  # evaluation time for stopwatch
-        button_bar = self.add_button_bar()
+        button_bar = self.add_button_bar(spacing=4)
         self.play_pause_btn = button_bar.add_button("Play")
         self.reset_btn = button_bar.add_button("Reset")
         self.time_label = self.add_label("00:00:00")
-        font = QFont("Courier New", font_size)
-        self.time_label.setFont(font)
+        self.time_font = self.default_time_font
         self.elapsed = QTime(0, 0, 0)
         self.running = False
-        self.targets: OrderedDict[str, str] = {}  # time -> spoken message
-        self.completed_targets = []
         self.play_pause_btn.clicked.connect(self.play_pause_button_clicked)
         self.reset_btn.clicked.connect(self.reset_button_clicked)
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_time)
-        self.speaker: MacVoice = MacVoice(Voice.Samantha)
+        self.speaker: Speaker = Speaker(Voice.Samantha)
         self.time_reached.connect(self._speak)
 
     @property
     def current_time(self) -> str:
         """Return the current stopwatch time as a string (hh:mm:ss)."""
         return self.elapsed.toString("hh:mm:ss")
+
+    @property
+    def time_font(self) -> QFont:
+        return self.time_label.font()
+
+    @time_font.setter
+    def time_font(self, font: QFont) -> None:
+        self.time_label.setFont(font)
 
     def set_targets(self, target_dict: OrderedDict[str, str]):
         """

@@ -5,6 +5,12 @@ class Alignment(Enum):
     stacked = auto()
     vertical = auto()
 
+
+class RunState(Enum):
+    paused = auto()
+    playing = auto()
+
+
 class Position(Enum):
     bottom = auto()
     center = auto()
