@@ -1,14 +1,24 @@
 from __future__ import annotations
-import time
 
 
-def lerp_volume(self, start: int | float, end: int | float, duration_ms: int = 500, steps: int = 50):
-    duration = duration_ms / 1000.0  # convert to seconds
-    interval = duration / steps      # time between updates
-    start_time = time.perf_counter()
+def time_nice(seconds: int) -> str:
+    """Returns a string that represents a nice time in seconds."""
+    m, s = divmod(seconds, 60)
+    h, m = divmod(m, 60)
+    if h:
+        hour_str = f'{h} hour{"" if h == 1 else "s"} '
+    else:
+        hour_str = ""
+    if m:
+        minute_str = f'{m} minute{"" if m == 1 else "s"} '
+    else:
+        minute_str = ""
+    if s:
+        seconds_str = f'{s} second{"" if s == 1 else "s"} '
+    else:
+        seconds_str = ""
+    return f'{hour_str}{minute_str}{seconds_str}'
 
-    for i in range(steps + 1):
-        t = (time.perf_counter() - start_time) / duration
-        t = min(max(t, 0.0), 1.0)  # clamp between 0–1
-        value = start + (end - start) * t
-        time.sleep(interval)
+
+if __name__ == '__main__':
+    print(time_nice(65))

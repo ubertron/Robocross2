@@ -33,7 +33,7 @@ class MusicPlayer(GenericWidget):
     }
     default_volume = 7
     button_width = 80
-    volume_button_width = 20
+    volume_button_width = 32
     volume_key = 'volume'
     playlist_key = 'playlist'
 
@@ -67,7 +67,6 @@ class MusicPlayer(GenericWidget):
         self.play_pause_button.setFixedWidth(self.button_width)
         self.next_button.setFixedWidth(self.button_width)
         self.volume = self.settings.value(self.volume_key, self.default_volume)
-        self.volume_label.setFixedWidth(64)
         self.volume_up.setFixedWidth(self.volume_button_width)
         self.volume_down.setFixedWidth(self.volume_button_width)
         self.mute_button.setCheckable(True)
@@ -161,6 +160,7 @@ class MusicPlayer(GenericWidget):
 
     def playlist_changed(self):
         """Event for playlist_combo_box."""
+        initial_run_state = self.run_state
         self.run_state = RunState.paused
         self.media_player.stop()
         self.settings.setValue(self.playlist_key, self.current_playlist.name)
@@ -171,6 +171,7 @@ class MusicPlayer(GenericWidget):
             else:
                 LOGGER.exception(f"Could not find track '{self.current_track}'")
                 self.track_index = -1
+        self.run_state = initial_run_state
 
     def volume_changed(self, delta: int):
         """Set the volume."""

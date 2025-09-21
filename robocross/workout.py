@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from robocross.robocross_enums import Equipment, Intensity, AerobicType, Target
+from core import time_utils
 
 
 @dataclass
@@ -26,4 +27,13 @@ class Workout:
                        intensity=Intensity.low,
                        aerobic_type=AerobicType.recovery,
                        target=Target.full_body,
-                       time=8)
+                       time=83)
+
+    @property
+    def time_nice(self) -> str:
+        return time_utils.time_nice(self.time)
+
+
+if __name__ == "__main__":
+    workout = Workout.default()
+    print(workout.time_nice)

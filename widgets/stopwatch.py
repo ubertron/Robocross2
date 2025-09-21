@@ -31,14 +31,14 @@ class Stopwatch(GenericWidget):
         self.completed_targets = []
         self.period: int = period  # evaluation time for stopwatch
         button_bar = self.add_button_bar(spacing=4)
-        self.play_pause_btn = button_bar.add_button("Play")
-        self.reset_btn = button_bar.add_button("Reset")
+        self.play_pause_button = button_bar.add_button("Play")
+        self.reset_button = button_bar.add_button("Reset")
         self.time_label = self.add_label("00:00:00")
         self.time_font = self.default_time_font
         self.elapsed = QTime(0, 0, 0)
         self.running = False
-        self.play_pause_btn.clicked.connect(self.play_pause_button_clicked)
-        self.reset_btn.clicked.connect(self.reset_button_clicked)
+        self.play_pause_button.clicked.connect(self.play_pause_button_clicked)
+        self.reset_button.clicked.connect(self.reset_button_clicked)
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_time)
         self.speaker: Speaker = Speaker(Voice.Samantha)
@@ -72,12 +72,12 @@ class Stopwatch(GenericWidget):
     def play_pause_button_clicked(self):
         if not self.running:
             self.timer.start(self.period)
-            self.play_pause_btn.setText("Pause")
+            self.play_pause_button.setText("Pause")
             self.running = True
             run_mode = RunMode.play
         else:
             self.timer.stop()
-            self.play_pause_btn.setText("Play")
+            self.play_pause_button.setText("Play")
             self.running = False
             run_mode = RunMode.paused
         self.play_pause_clicked.emit(run_mode)
@@ -87,7 +87,7 @@ class Stopwatch(GenericWidget):
         self.timer.stop()
         self.elapsed = QTime(0, 0, 0)
         self.time_label.setText("00:00:00")
-        self.play_pause_btn.setText("Play")
+        self.play_pause_button.setText("Play")
         self.running = False
         self.completed_targets = []
 

@@ -35,7 +35,7 @@ class WorkoutChip(GridWidget):
         self.progress_label: QLabel = self.add_label('', row=0, column=0)
         self.label = self.add_label(text="", row=0, column=0, alignment=Qt.AlignmentFlag.AlignLeft)
         self.label.setFont(self.default_font)
-        self.label.setContentsMargins(self.padding, self.padding, self.padding, self.padding)
+        self.label.setContentsMargins(self.padding * 3, self.padding, self.padding * 3, self.padding)
         self.timer: QTimer = QTimer()
         self.workout = workout
         self.time: float = 0.0

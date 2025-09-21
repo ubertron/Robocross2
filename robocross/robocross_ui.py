@@ -43,7 +43,7 @@ class Robocross(GenericWidget):
         self.form = self.parameters_widget.form
         self.tab_widget.addTab(self.parameters_widget, 'Create')
         self.viewer: Viewer = Viewer()
-        self.tab_widget.addTab(self.viewer, 'Workout')
+        self.tab_widget.addTab(self.viewer, 'Player')
         self.routine = None
         self.info = ""
         self.workout_list = []
@@ -55,7 +55,9 @@ class Robocross(GenericWidget):
         self.parameters_widget.build_button_clicked.connect(self.build_button_clicked)
         self.parameters_widget.print_button_clicked.connect(self.print_button_clicked)
         self.setMinimumWidth(self.minimum_width)
-        self.viewer.stopwatch.play_pause_btn.setEnabled(False)
+        self.viewer.stopwatch.play_pause_button.setEnabled(False)
+        self.viewer.stopwatch.reset_button.setEnabled(False)
+        self.viewer.scroll_widget.setVisible(False)
         self.resize(self.app_size)
 
     @property
@@ -69,9 +71,9 @@ class Robocross(GenericWidget):
         self.viewer.info_font = QFont(SANS_SERIF_FONT, int(value.width() / 32))
         self.viewer.progress_bar_font = QFont(SANS_SERIF_FONT, int(value.height() / 16))
         self.viewer.progress_bar.setFixedHeight(int(value.height() / 10))
-        self.viewer.stopwatch_height = int(value.height() / 4)
-        self.viewer.stopwatch_font = QFont(CODE_FONT, int(value.height() / 6))
-        self.viewer.workout_chip_font = QFont(SANS_SERIF_FONT, int(value.height() / 16))
+        self.viewer.resize_stopwatch()
+        self.viewer.chip_font = QFont(SANS_SERIF_FONT, int(value.height() / 36))
+        self.viewer.resize_scroll_widget()
 
     @property
     def date_time_string(self) -> str:
@@ -101,7 +103,7 @@ class Robocross(GenericWidget):
         self._routine = routine
         workout_list = routine.get_workout_list(self.form.workout_type) if routine else []
         self.workout_list = workout_list
-        self.viewer.info = "get ready..."
+        self.viewer.info = 'create a workout'
 
     @property
     def user(self) -> str:
@@ -136,10 +138,13 @@ class Robocross(GenericWidget):
                 equipment_filter=self.parameters_widget.equipment_filter,
             )
             if self.workout_list:
-                self.viewer.stopwatch.play_pause_btn.setEnabled(True)
+                self.viewer.stopwatch.play_pause_button.setEnabled(True)
+                self.viewer.stopwatch.reset_button.setEnabled(True)
+                self.viewer.scroll_widget.setVisible(True)
+                self.viewer.info = 'get ready...'
                 LOGGER.info(self.workout_report)
             else:
-                self.parameters_widget.info = "No workouts found.\nPlease select more equipment."
+                self.parameters_widget.info = 'No workouts found.\nPlease select more equipment.'
 
     def print_button_clicked(self):
         """Event for print button."""
@@ -155,6 +160,8 @@ class Robocross(GenericWidget):
 
 
 if __name__ == '__main__':
+    import qdarktheme
+
     from PySide6.QtWidgets import QApplication
     from PySide6.QtCore import QCoreApplication, Qt
     from PySide6.QtGui import QPixmap
@@ -163,6 +170,7 @@ if __name__ == '__main__':
 
     QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
     app = QApplication(sys.argv)
+    qdarktheme.setup_theme()
     app.setWindowIcon(QPixmap(image_path("robocross.png").as_posix()))
     app.setApplicationDisplayName(APP_NAME)
     widget = Robocross()

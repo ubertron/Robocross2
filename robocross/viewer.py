@@ -5,7 +5,7 @@ import random
 from collections import OrderedDict
 from datetime import timedelta
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QSizePolicy, QSplitter
 
@@ -13,7 +13,7 @@ from core.core_enums import Alignment
 from core.logging_utils import get_logger
 from core.speaker import Speaker, Voice
 from music_player.music_player_ui import MusicPlayer
-from robocross import REST_PERIOD, SANS_SERIF_FONT
+from robocross import REST_PERIOD, SANS_SERIF_FONT, CODE_FONT
 from robocross.robocross_enums import AerobicType, RunMode, Intensity
 from robocross.workout import Workout
 from robocross.workout_chip import WorkoutChip
@@ -33,27 +33,23 @@ class Viewer(GenericWidget):
     default_info_font = QFont(SANS_SERIF_FONT, 32)
     default_progress_bar_font = QFont(SANS_SERIF_FONT, 28)
     default_stopwatch_font = QFont(SANS_SERIF_FONT, 32)
-    default_workout_chip_font = QFont(SANS_SERIF_FONT, 80)
+    default_chip_font = QFont(SANS_SERIF_FONT, 20)
 
     def __init__(self):
         super(Viewer, self).__init__(title="Workout Viewer", margin=0, spacing=0)
-        self.workout_pane: GenericWidget = GenericWidget(margin=0, spacing=0)
         self.music_player: MusicPlayer = self.add_widget(widget=MusicPlayer())
-        splitter: QSplitter = self.add_widget(QSplitter(Qt.Horizontal))
-        splitter.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
-        scroll_widget = ScrollWidget()
-        scroll_widget.widget.add_widget(self.workout_pane)
-        content_pane = GenericWidget(alignment=Alignment.vertical, margin=0, spacing=0)
-        self.stopwatch: Stopwatch = content_pane.add_widget(Stopwatch(period=self.period))
+        horizontal_pane: GenericWidget = self.add_widget(GenericWidget(alignment=Alignment.horizontal))
+        self.scroll_widget = horizontal_pane.add_widget(ScrollWidget())
+        self.workout_pane: GenericWidget = GenericWidget(margin=0, spacing=0)
+        self.scroll_widget.widget.add_widget(self.workout_pane)
+        self.vertical_pane = horizontal_pane.add_widget(GenericWidget(alignment=Alignment.vertical, margin=0, spacing=0))
+        self.stopwatch: Stopwatch = self.vertical_pane.add_widget(Stopwatch(period=self.period))
         self.stopwatch.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        self.progress_bar: WorkoutChip = content_pane.add_widget(WorkoutChip(self.rest_workout))
+        self.progress_bar: WorkoutChip = self.vertical_pane.add_widget(WorkoutChip(self.rest_workout))
         self.progress_bar_font = self.default_progress_bar_font
         self.progress_bar.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.info_label = content_pane.add_label()
+        self.info_label = self.vertical_pane.add_label()
         self.info_label.setContentsMargins(20, 20, 20, 20)
-        splitter.addWidget(scroll_widget)
-        splitter.addWidget(content_pane)
-        splitter.setSizes([125, 250])
         self.info_font = self.default_info_font
         self.stopwatch_font = self.default_stopwatch_font
         self.info_label.setWordWrap(True)
@@ -62,12 +58,13 @@ class Viewer(GenericWidget):
         self.current_index = 0
         self.rest_time = 0
         self.started = False
-        self.workout_chip_font = self.default_workout_chip_font
+        self.chip_font = self.default_chip_font
         self.mac_voice = Speaker(voice=random.choice([Voice.Samantha, Voice.Daniel]))
         self.run_mode = RunMode.paused
         self._setup_ui()
 
     def _setup_ui(self):
+        self.workout_pane.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
         self.stopwatch.time_reached.connect(self.advance_workout)
         self.stopwatch.play_pause_clicked.connect(self.toggle_run_mode)
         self.stopwatch.reset_clicked.connect(self.stopwatch_reset)
@@ -77,6 +74,13 @@ class Viewer(GenericWidget):
         self.music_player.play_pause_button.setVisible(False)
         self.music_player.next_button.setVisible(False)
         self.music_player.mute_button.setVisible(False)
+
+    @property
+    def app_size(self) -> QSize | None:
+        try:
+            return self.parent().parent().parent().app_size
+        except AttributeError:
+            return None
 
     @property
     def current_index(self) -> int:
@@ -158,14 +162,14 @@ class Viewer(GenericWidget):
         self.stopwatch.time_label.setFont(font)
 
     @property
-    def workout_chip_font(self) -> QFont:
+    def chip_font(self) -> QFont:
         return self._workout_chip_font
 
-    @workout_chip_font.setter
-    def workout_chip_font(self, font: QFont):
+    @chip_font.setter
+    def chip_font(self, font: QFont):
         self._workout_chip_font = font
         for chip in self.workout_chips:
-            chip.setFont(font)
+            chip.label.setFont(font)
 
     @property
     def workout_list(self) -> list[Workout] | None:
@@ -178,11 +182,14 @@ class Viewer(GenericWidget):
 
         # create the workout strips
         for workout in workout_list:
-            strip = WorkoutChip(workout=workout, period=self.period, show_progress=False)
-            strip.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
-            strip.setHidden(workout.name == REST_PERIOD)
-            self.workout_pane.add_widget(strip)
+            chip: WorkoutChip = WorkoutChip(workout=workout, period=self.period, show_progress=False)
+            chip.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
+            chip.setHidden(workout.name == REST_PERIOD)
+            self.workout_pane.add_widget(chip)
         self.workout_pane.add_stretch()
+        if self.app_size is not None:
+            self.chip_font = QFont(SANS_SERIF_FONT, int(self.app_size.height() / 36))
+        self.resize_scroll_widget()
         self.notification_dict = OrderedDict()
         ref_time = timedelta(hours=0, minutes=0, seconds=0)
 
@@ -247,6 +254,7 @@ class Viewer(GenericWidget):
         self.info = "Paused"
         self.progress_bar.timer.stop()
         self.current_workout_strip.timer.stop()
+        self.music_player.media_player.pause()
 
     def play_workout(self):
         """Play the workout."""
@@ -266,7 +274,7 @@ class Viewer(GenericWidget):
             speech = f"Rest time {self.current_workout.time} seconds.[[slnc 500]]{next_string}"
             self.speak(text=speech)
             self.info = (
-                f"<span style='font-style:italic'>Duration: {self.current_workout.time} seconds</span><br /><br />"
+                f"<span style='font-style:italic'>Duration: {self.current_workout.time_nice}</span><br /><br />"
                 f"{next_string.replace('[[slnc 500]]', '')}"
             )
             self.progress_bar.setVisible(True)
@@ -277,9 +285,15 @@ class Viewer(GenericWidget):
             self.workout_chips[self.current_index].start()
             description = f"{self.current_workout.description}." if self.current_workout.description else "(no details)"
             self.info = (
-                f"<span style='font-style:italic'>Duration: {self.current_workout.time} seconds</span><br /><br />"
+                f"<span style='font-style:italic'>Duration: {self.current_workout.time_nice}</span><br /><br />"
                 f"{description.capitalize()}"
             )
+
+    def resize_scroll_widget(self):
+        self.scroll_widget.setFixedWidth(self.workout_pane.sizeHint().width() + 16)
+
+    def resize_stopwatch(self):
+        self.stopwatch_font = QFont(CODE_FONT, int(self.vertical_pane.width() / 6))
 
     def rest_strip_time_reached(self):
         """Event for rest strip."""
