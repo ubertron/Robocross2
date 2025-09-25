@@ -243,6 +243,7 @@ class Viewer(GenericWidget):
             self.stopwatch.reset_button_clicked()
             self.stopwatch_reset()
             self.info = f"{self.workout_length_nice} workout complete"
+            self.music_player.media_player.stop()
         else:
             self.workout_chips[self.current_index].start()
             self.progress_bar.reset()

@@ -17,11 +17,13 @@ class Equipment(Enum):
     bo_staff = auto()
     dumbbell = auto()
     barbell = auto()
+    chair = auto()
     jump_rope = auto()
     kettle_bell = auto()
     mat = auto()
     medicine_ball = auto()
     swiss_ball = auto()
+    wrist_weights = auto()
 
 
 class Intensity(Enum):
@@ -45,6 +47,7 @@ class Target(Enum):
     full_body = auto()
     legs = auto()
     lower_body = auto()
+    obliques = auto()
     shoulders = auto()
     upper_body = auto()
 

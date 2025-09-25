@@ -14,10 +14,13 @@ def time_nice(seconds: int) -> str:
     else:
         minute_str = ""
     if s:
-        seconds_str = f'{s} second{"" if s == 1 else "s"} '
+        seconds_str = f'{s} second{"" if s == 1 else "s"}'
     else:
         seconds_str = ""
-    return f'{hour_str}{minute_str}{seconds_str}'
+    result = f'{hour_str}{minute_str}{seconds_str}'
+    if result[-1] == " ":
+        result = result[:-1]
+    return result
 
 
 if __name__ == '__main__':

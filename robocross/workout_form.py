@@ -30,7 +30,7 @@ class WorkoutForm(FormWidget):
         self.settings = QSettings(DEVELOPER, APPLICATION_NAME)
         self.length_spin_box: QSpinBox = self.add_int_field(label="Workout length (minutes)")
         self.interval_spin_box: QSpinBox = self.add_int_field(label="Interval (seconds)")
-        self.rest_time_spin_box: QSpinBox = self.add_int_field(label="Rest Time (seconds)")
+        self.rest_time_spin_box: QSpinBox = self.add_int_field(label="Approximate Rest Time (seconds)")
         self.workout_type_combo_box: QComboBox = self.add_combo_box(label="Workout Type", items=WorkoutType.values())
         self.nope_list_line_edit: QLineEdit = self.add_line_edit(label="Nope List", placeholder_text="List exercises to avoid here")
         self.setup_ui()

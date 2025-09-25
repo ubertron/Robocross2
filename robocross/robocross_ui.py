@@ -13,6 +13,7 @@ from PySide6.QtWidgets import QTabWidget
 
 from core import DEVELOPER, logging_utils
 from core.version_info import VersionInfo
+from core import time_utils
 from robocross import APP_NAME, REST_PERIOD, SANS_SERIF_FONT, CODE_FONT
 from robocross.parameters_widget import ParametersWidget
 from robocross.routine import Routine
@@ -44,6 +45,7 @@ class Robocross(GenericWidget):
         self.tab_widget.addTab(self.parameters_widget, 'Create')
         self.viewer: Viewer = Viewer()
         self.tab_widget.addTab(self.viewer, 'Player')
+        self.rest_time = 0
         self.routine = None
         self.info = ""
         self.workout_list = []
@@ -95,6 +97,14 @@ class Robocross(GenericWidget):
         self._info = info
 
     @property
+    def rest_time(self) -> int:
+        return self._rest_time
+
+    @rest_time.setter
+    def rest_time(self, rest_time: int) -> None:
+        self._rest_time = rest_time
+
+    @property
     def routine(self) -> Routine | None:
         return self._routine
 
@@ -103,6 +113,8 @@ class Robocross(GenericWidget):
         self._routine = routine
         workout_list = routine.get_workout_list(self.form.workout_type) if routine else []
         self.workout_list = workout_list
+        if routine:
+            self.rest_time = routine.rest_time
         self.viewer.info = 'create a workout'
 
     @property
@@ -117,13 +129,17 @@ class Robocross(GenericWidget):
     def workout_list(self, workout_list: list[Workout]):
         self._workout_list = workout_list
         self.viewer.workout_list = workout_list
-        self.parameters_widget.info = self.workout_report
 
     @property
     def workout_report(self) -> str:
-        report = '\n'.join(f"• {x.name}" for x in self.workout_list if x.name != REST_PERIOD)
+        report = '\n'.join(f"{x.name.title()}  ({time_utils.time_nice(self.form.interval)})" for x in self.workout_list if x.name != REST_PERIOD)
         equipment = ', '.join(self.equipment)
-        return f"Workout items:\n{report}\n\nEquipment: {equipment}"
+        return (
+            f"Workout time: {time_utils.time_nice(self.form.length * 60)}\n"
+            f"Rest time: {time_utils.time_nice(self.rest_time)}\n"
+            f"Equipment: {equipment}\n\n"
+            f"Workout items:\n{report}"
+        )
 
     def build_button_clicked(self):
         """Create the routine."""
@@ -143,6 +159,7 @@ class Robocross(GenericWidget):
                 self.viewer.scroll_widget.setVisible(True)
                 self.viewer.info = 'get ready...'
                 LOGGER.info(self.workout_report)
+                self.parameters_widget.info = self.workout_report
             else:
                 self.parameters_widget.info = 'No workouts found.\nPlease select more equipment.'
 

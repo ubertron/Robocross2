@@ -220,7 +220,8 @@
         "intensity": "medium",
         "aerobic_type": "strength",
         "target": [
-            "abdominals"
+            "abdominals",
+            "obliques"
         ],
         "time": 120
     },
@@ -277,7 +278,7 @@
     "weighted punches": {
         "description": "continuous punches forward holding weights",
         "equipment": [
-            "hand_weight"
+            "wrist_weights"
         ],
         "intensity": "high",
         "aerobic_type": "cardio",
@@ -344,6 +345,86 @@
         "target": [
             "shoulders",
             "arms"
+        ],
+        "time": 120
+    },
+    "knee raise with twist": {
+        "description": "alternate raising the  knee to touch the opposite elbow",
+        "equipment": [],
+        "intensity": "medium",
+        "aerobic_type": "cardio",
+        "target": [
+            "obliques",
+            "abdominals"
+        ],
+        "time": 120
+    },
+    "knee raise with hand clap": {
+        "description": "alternate raising the  knee touching your palms under the raised leg",
+        "equipment": [],
+        "intensity": "medium",
+        "aerobic_type": "cardio",
+        "target": [
+            "shoulders",
+            "arms"
+        ],
+        "time": 120
+    },
+    "preacher curls": {
+        "description": "sit backwards on a chair and curl dumbbells over the back of the seat",
+        "equipment": [
+            "chair"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "arms"
+        ],
+        "time": 120
+    },
+    "shrugs": {
+        "description": "hold dumbbells low while raising and dropping shoulders",
+        "equipment": [
+            "dumbbell"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "arms"
+        ],
+        "time": 120
+    },
+    "step jumps": {
+        "description": "stand with one foot in front of the other, then jump to alternate",
+        "equipment": [],
+        "intensity": "medium",
+        "aerobic_type": "cardio",
+        "target": [
+            "legs"
+        ],
+        "time": 120
+    },
+    "medicine ball swings": {
+        "description": "stand bent forward with a medicine ball, alternate swings from side to side",
+        "equipment": [
+            "medicine_ball"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "obliques"
+        ],
+        "time": 120
+    },
+    "leg raises": {
+        "description": "stand bent forward with a medicine ball, alternate swings from side to side",
+        "equipment": [
+            "mat"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "legs"
         ],
         "time": 120
     }

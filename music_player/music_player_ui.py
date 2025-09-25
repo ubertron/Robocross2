@@ -18,7 +18,7 @@ from widgets.generic_widget import GenericWidget
 
 TOOL_NAME = "Music Player"
 VERSIONS = [
-    VersionInfo(name=TOOL_NAME, version="0.1", codename="bugatti", info="first release")
+    VersionInfo(name=TOOL_NAME, version="0.1", codename="Bugatti Veyron", info="first release")
 ]
 DEFAULT_PLAYLIST = 'Maximum Overdrive'
 LOGGER = get_logger(name=__name__)
