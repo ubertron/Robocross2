@@ -15,6 +15,7 @@ class Equipment(Enum):
     band = auto()
     bench = auto()
     bo_staff = auto()
+    cable_machine = auto()
     dumbbell = auto()
     barbell = auto()
     chair = auto()

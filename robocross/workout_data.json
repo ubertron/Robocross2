@@ -427,5 +427,41 @@
             "legs"
         ],
         "time": 120
+    },
+    "lateral pull-downs": {
+        "description": "stand bent forward with a medicine ball, alternate swings from side to side",
+        "equipment": [
+            "cable_machine"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "back"
+        ],
+        "time": 120
+    },
+    "step lunges": {
+        "description": "take deep steps forward, while holding weights",
+        "equipment": [
+            "dumbbell"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "legs"
+        ],
+        "time": 120
+    },
+    "reverse lunges": {
+        "description": "take alternate deep steps backwards, while holding weights",
+        "equipment": [
+            "dumbbell"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "legs"
+        ],
+        "time": 120
     }
 }

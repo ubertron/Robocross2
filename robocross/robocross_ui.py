@@ -4,17 +4,20 @@ from __future__ import annotations
 import getpass
 import logging
 import sys
+import time
+
 from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import QSettings, QSize
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QTabWidget
+from PySide6.QtGui import QFont, QPixmap
+from PySide6.QtWidgets import QTabWidget, QSplashScreen
 
-from core import DEVELOPER, logging_utils
+from core import DEVELOPER, logging_utils, splash_screen_manager, SANS_SERIF_FONT, CODE_FONT
 from core.version_info import VersionInfo
 from core import time_utils
-from robocross import APP_NAME, REST_PERIOD, SANS_SERIF_FONT, CODE_FONT
+from core.core_paths import image_path
+from robocross import APP_NAME, REST_PERIOD
 from robocross.parameters_widget import ParametersWidget
 from robocross.routine import Routine
 from robocross.viewer import Viewer
@@ -30,6 +33,9 @@ VERSIONS = (
     VersionInfo(name=APP_NAME, version='1.0', codename='Alpha', info='Initial release'),
     VersionInfo(name=APP_NAME, version='2.0', codename='Colt Seavers', info='Revamp'),
 )
+SPLASH_SCREEN = image_path("splashscreen_640.png")
+ROBOCROSS_LOGO = image_path("robocross.png")
+
 
 class Robocross(GenericWidget):
     app_size_key = "app_size"
@@ -184,12 +190,14 @@ if __name__ == '__main__':
     from PySide6.QtGui import QPixmap
 
     from core.core_paths import image_path
-
     QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
     app = QApplication(sys.argv)
-    qdarktheme.setup_theme()
-    app.setWindowIcon(QPixmap(image_path("robocross.png").as_posix()))
+    splash_manager = splash_screen_manager.SplashScreenManager(
+        splash_image_path=SPLASH_SCREEN, message=VERSIONS[-1].short_title.upper())
+    splash_manager.show_splash(pause_duration_ms=5000, fade_duration_ms=1000)
+    app.setWindowIcon(QPixmap(ROBOCROSS_LOGO.as_posix()))
     app.setApplicationDisplayName(APP_NAME)
+    qdarktheme.setup_theme()
     widget = Robocross()
     widget.show()
     sys.exit(app.exec())

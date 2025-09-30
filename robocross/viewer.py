@@ -13,7 +13,8 @@ from core.core_enums import Alignment
 from core.logging_utils import get_logger
 from core.speaker import Speaker, Voice
 from music_player.music_player_ui import MusicPlayer
-from robocross import REST_PERIOD, SANS_SERIF_FONT, CODE_FONT
+from robocross import REST_PERIOD
+from core import SANS_SERIF_FONT, CODE_FONT
 from robocross.robocross_enums import AerobicType, RunMode, Intensity
 from robocross.workout import Workout
 from robocross.workout_chip import WorkoutChip

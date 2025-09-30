@@ -9,5 +9,10 @@ class VersionInfo:
     info: str
 
     @property
+    def short_title(self) -> str:
+        return f"{self.name} v{self.version}"
+
+    @property
     def title(self) -> str:
         return f"{self.name} v{self.version} [{self.codename}]"
+

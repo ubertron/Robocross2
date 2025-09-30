@@ -1,4 +1,4 @@
-
+from core.core_paths import image_path
 from pathlib import Path
 from PIL import Image, ImageColor, ImageDraw
 
@@ -52,11 +52,30 @@ def fill_foreground(path: Path, output_path: Path, rgb: tuple[int, int, int]) ->
                 pixels[x, y] = rgba
     img.save(output_path)
 
+def resize(path: Path, new_width = 320, text_suffix: str = ""):
+    # Open the image
+    image = Image.open(path.as_posix())
+
+    # Calculate the aspect ratio
+    aspect_ratio = image.height / image.width
+
+    # Calculate the new height based on the aspect ratio
+    new_height = int(new_width * aspect_ratio)
+
+    # Resize the image using the calculated dimensions
+    resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)  # Use a good resampling filter
+
+    # Save the resized image
+    resized_image.save(path.with_stem(f"{path.stem}{text_suffix}"))
+
 if __name__ == "__main__":
     from core_paths import image_path, IMAGE_FOLDER
-    my_path = image_path("open.png")
+    # my_path = image_path("open.png")
     #tint_image(image_path=my_path, rgb=(255, 0, 0), output_path=IMAGE_FOLDER / "open_red.png", factor=.3)
     #fill_background(image_path=my_path, rgb=(255, 0, 0), output_path=IMAGE_FOLDER / "open_red.png")
     # fill_foreground(path=my_path, rgb=LIGHT_GREY, output_path=IMAGE_FOLDER / "open_grey.png")
-    fill_foreground(path=image_path("new.png"), rgb=LIGHT_GREY, output_path=IMAGE_FOLDER / "new_grey.png")
-    fill_foreground(path=image_path("save.png"), rgb=LIGHT_GREY, output_path=IMAGE_FOLDER / "save_grey.png")
+    # fill_foreground(path=image_path("new.png"), rgb=LIGHT_GREY, output_path=IMAGE_FOLDER / "new_grey.png")
+    # fill_foreground(path=image_path("save.png"), rgb=LIGHT_GREY, output_path=IMAGE_FOLDER / "save_grey.png")
+    my_image = image_path('splashscreen.png')
+    print(my_image)
+    resize(path=my_image, new_width=640, text_suffix="_640")

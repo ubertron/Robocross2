@@ -5,7 +5,7 @@ from PySide6.QtCore import QTimer, Qt, QElapsedTimer, QEvent, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QProgressBar, QSizePolicy
 
-from robocross import SANS_SERIF_FONT
+from core import SANS_SERIF_FONT
 from robocross.workout import Workout
 from robocross.robocross_enums import Intensity, AerobicType
 from robocross import REST_PERIOD

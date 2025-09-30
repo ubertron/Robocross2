@@ -11,7 +11,7 @@ from PySide6.QtGui import QFont
 from collections import OrderedDict
 from core.speaker import Speaker, Voice
 from core.logging_utils import get_logger
-from robocross import CODE_FONT
+from core import CODE_FONT
 from robocross.robocross_enums import RunMode
 from widgets.generic_widget import GenericWidget
 
