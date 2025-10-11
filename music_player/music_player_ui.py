@@ -98,7 +98,9 @@ class MusicPlayer(GenericWidget):
 
     @property
     def playlists(self) -> list[Playlist]:
-        return [Playlist(name=x.stem) for x in PLAYLIST_DIR.glob("*.txt")]
+        playlists = [x.stem for x in PLAYLIST_DIR.glob("*.txt")]
+        playlists.sort()
+        return [Playlist(name=x) for x in playlists]
 
     @property
     def run_state(self) -> RunState:

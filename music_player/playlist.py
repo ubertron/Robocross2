@@ -78,4 +78,4 @@ if __name__ == "__main__":
     # beastie_boys = Playlist(name='Intergalactic')
     # beastie_boys.build_from_artists(artists=['Beastie Boys'], count=20)
     # beastie_boys.save()
-    create_single_artist_playlist(artist='Drab Majesty')
+    create_single_artist_playlist(artist='Billy Idol', count=20)

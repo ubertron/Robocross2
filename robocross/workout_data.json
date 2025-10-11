@@ -9,7 +9,7 @@
         "target": [
             "full_body"
         ],
-        "time": 120
+        "energy": 120
     },
     "shuttle runs with weight swap": {
         "description": "at the end of each shuttle, swap to a different heavy object",
@@ -22,7 +22,7 @@
         "target": [
             "full_body"
         ],
-        "time": 120
+        "energy": 120
     },
     "spot running": {
         "description": "run on the spot - optionally, you can hold weights.",
@@ -32,7 +32,7 @@
         "target": [
             "full_body"
         ],
-        "time": 120
+        "energy": 120
     },
     "high knees": {
         "description": "alternate high knees - optionally, you can hold weights.",
@@ -42,7 +42,7 @@
         "target": [
             "full_body"
         ],
-        "time": 120
+        "energy": 120
     },
     "reverse flies standing": {
         "description": "stand bending forward, raise weights laterally",
@@ -54,7 +54,7 @@
         "target": [
             "back"
         ],
-        "time": 120
+        "energy": 120
     },
     "jumping jacks": {
         "description": "standing up straight, jump to star posture, then back to straight",
@@ -64,7 +64,7 @@
         "target": [
             "full_body"
         ],
-        "time": 120
+        "energy": 120
     },
     "dumbbell flies": {
         "description": "lie on bench back-facing, raise dumbbells vertically from the side",
@@ -77,7 +77,7 @@
         "target": [
             "chest"
         ],
-        "time": 120
+        "energy": 120
     },
     "skipping": {
         "description": "use jump rope continuously",
@@ -89,7 +89,7 @@
         "target": [
             "full_body"
         ],
-        "time": 120
+        "energy": 120
     },
     "lunges": {
         "description": "alternate steps forward with weights",
@@ -102,7 +102,7 @@
         "target": [
             "legs"
         ],
-        "time": 120
+        "energy": 120
     },
     "three point shoulder raise": {
         "description": "raise dumbbells to front, rotate to side, then lower",
@@ -114,7 +114,7 @@
         "target": [
             "shoulders"
         ],
-        "time": 120
+        "energy": 120
     },
     "three point shoulder raise reversed": {
         "description": "raise dumbbells to side, rotate to front, then lower",
@@ -126,7 +126,7 @@
         "target": [
             "shoulders"
         ],
-        "time": 120
+        "energy": 120
     },
     "crunches": {
         "description": "lie on back and reach forward, bending at the hip",
@@ -138,7 +138,7 @@
         "target": [
             "abdominals"
         ],
-        "time": 120
+        "energy": 300
     },
     "russian twists": {
         "description": "lie on back with legs raised, plant a weight on alternate sides",
@@ -150,7 +150,7 @@
         "target": [
             "abdominals"
         ],
-        "time": 120
+        "energy": 120
     },
     "squats": {
         "description": "start standing holding weights, bend legs to low position keeping back straight",
@@ -162,7 +162,7 @@
         "target": [
             "legs"
         ],
-        "time": 120
+        "energy": 120
     },
     "kettle bell swings": {
         "description": "thrust quads to raise kettle bells to chest height",
@@ -174,7 +174,7 @@
         "target": [
             "full_body"
         ],
-        "time": 120
+        "energy": 120
     },
     "curl and press": {
         "description": "standing curl with shoulder press",
@@ -186,7 +186,7 @@
         "target": [
             "upper_body"
         ],
-        "time": 120
+        "energy": 120
     },
     "dumbbell curls": {
         "description": "standing curl",
@@ -198,7 +198,7 @@
         "target": [
             "upper_body"
         ],
-        "time": 120
+        "energy": 120
     },
     "tricep kickbacks": {
         "description": "standing bent at the waist, raise dumbbells to horizontal",
@@ -210,7 +210,7 @@
         "target": [
             "arms"
         ],
-        "time": 120
+        "energy": 120
     },
     "oblique twist": {
         "description": "standing bent at the waist with bo staff at shoulder level, twist to alternate sides",
@@ -223,7 +223,7 @@
             "abdominals",
             "obliques"
         ],
-        "time": 120
+        "energy": 120
     },
     "bicycle crunches": {
         "description": "lying on back, rotate legs forward in a circular motion",
@@ -235,7 +235,7 @@
         "target": [
             "abdominals"
         ],
-        "time": 120
+        "energy": 300
     },
     "bench press": {
         "description": "lying on back, raise weights vertically",
@@ -249,7 +249,7 @@
         "target": [
             "chest"
         ],
-        "time": 120
+        "energy": 200
     },
     "medicine ball slams": {
         "description": "raise medicine ball overhead, then slam to ground",
@@ -261,7 +261,7 @@
         "target": [
             "full_body"
         ],
-        "time": 120
+        "energy": 120
     },
     "burpees": {
         "description": "push up, squat thrust, star jump",
@@ -273,7 +273,7 @@
         "target": [
             "full_body"
         ],
-        "time": 120
+        "energy": 120
     },
     "weighted punches": {
         "description": "continuous punches forward holding weights",
@@ -285,7 +285,7 @@
         "target": [
             "arms"
         ],
-        "time": 120
+        "energy": 120
     },
     "plank": {
         "description": "facing down with elbows on the floor, hold a straight position",
@@ -297,7 +297,7 @@
         "target": [
             "abdominals"
         ],
-        "time": 120
+        "energy": 125
     },
     "shoulder press": {
         "description": "standing up, hold dumbbells at shoulder level and raise vertically",
@@ -310,7 +310,7 @@
             "shoulders",
             "arms"
         ],
-        "time": 120
+        "energy": 100
     },
     "squat thrusts": {
         "description": "bent forward with hands on the ground, jump out, then back in",
@@ -320,7 +320,7 @@
         "target": [
             "full_body"
         ],
-        "time": 120
+        "energy": 500
     },
     "lateral raises": {
         "description": "standing up, raise dumbbells laterally",
@@ -333,7 +333,7 @@
             "shoulders",
             "arms"
         ],
-        "time": 120
+        "energy": 120
     },
     "front raises": {
         "description": "standing up, raise dumbbells to the front",
@@ -346,7 +346,7 @@
             "shoulders",
             "arms"
         ],
-        "time": 120
+        "energy": 120
     },
     "knee raise with twist": {
         "description": "alternate raising the  knee to touch the opposite elbow",
@@ -357,7 +357,7 @@
             "obliques",
             "abdominals"
         ],
-        "time": 120
+        "energy": 120
     },
     "knee raise with hand clap": {
         "description": "alternate raising the  knee touching your palms under the raised leg",
@@ -368,7 +368,7 @@
             "shoulders",
             "arms"
         ],
-        "time": 120
+        "energy": 120
     },
     "preacher curls": {
         "description": "sit backwards on a chair and curl dumbbells over the back of the seat",
@@ -380,7 +380,7 @@
         "target": [
             "arms"
         ],
-        "time": 120
+        "energy": 125
     },
     "shrugs": {
         "description": "hold dumbbells low while raising and dropping shoulders",
@@ -392,7 +392,7 @@
         "target": [
             "arms"
         ],
-        "time": 120
+        "energy": 180
     },
     "step jumps": {
         "description": "stand with one foot in front of the other, then jump to alternate",
@@ -402,7 +402,7 @@
         "target": [
             "legs"
         ],
-        "time": 120
+        "energy": 120
     },
     "medicine ball swings": {
         "description": "stand bent forward with a medicine ball, alternate swings from side to side",
@@ -414,7 +414,7 @@
         "target": [
             "obliques"
         ],
-        "time": 120
+        "energy": 120
     },
     "leg raises": {
         "description": "stand bent forward with a medicine ball, alternate swings from side to side",
@@ -426,7 +426,7 @@
         "target": [
             "legs"
         ],
-        "time": 120
+        "energy": 120
     },
     "lateral pull-downs": {
         "description": "stand bent forward with a medicine ball, alternate swings from side to side",
@@ -438,7 +438,7 @@
         "target": [
             "back"
         ],
-        "time": 120
+        "energy": 120
     },
     "step lunges": {
         "description": "take deep steps forward, while holding weights",
@@ -450,7 +450,7 @@
         "target": [
             "legs"
         ],
-        "time": 120
+        "energy": 120
     },
     "reverse lunges": {
         "description": "take alternate deep steps backwards, while holding weights",
@@ -462,6 +462,19 @@
         "target": [
             "legs"
         ],
-        "time": 120
+        "energy": 120
+    },
+    "single arm row": {
+        "description": "with one knee on the bench, raise a dumbbell vertically with the opposite arm",
+        "equipment": [
+            "dumbbell",
+            "bench"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "arms"
+        ],
+        "energy": 120
     }
 }
