@@ -104,6 +104,14 @@ class WorkoutChip(GridWidget):
         self.label.setText(workout.name.title())
         self.label.setToolTip(workout.description)
 
+    def update_display_name(self, display_name: str):
+        """Update the displayed name while keeping the same workout for progress tracking.
+
+        This is used for sub-workouts where the display changes but the progress
+        calculation stays based on the full workout duration.
+        """
+        self.label.setText(display_name.title())
+
 
 if __name__ == "__main__":
     from PySide6.QtWidgets import QApplication

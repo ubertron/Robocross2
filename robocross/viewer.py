@@ -44,6 +44,11 @@ class Viewer(GenericWidget):
         self.workout_pane: GenericWidget = GenericWidget(margin=0, spacing=0)
         self.scroll_widget.widget.add_widget(self.workout_pane)
         self.vertical_pane = horizontal_pane.add_widget(GenericWidget(alignment=Alignment.vertical, margin=0, spacing=0))
+        self.workout_name_label = self.vertical_pane.add_label("New Workout")
+        self.workout_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.workout_name_label.setStyleSheet("font-weight: bold; font-size: 24pt;")
+        self.workout_name_label.setContentsMargins(10, 10, 10, 10)
+        self.workout_name_label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self.stopwatch: Stopwatch = self.vertical_pane.add_widget(Stopwatch(period=self.period))
         self.stopwatch.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self.progress_bar: WorkoutChip = self.vertical_pane.add_widget(WorkoutChip(self.rest_workout))
@@ -56,6 +61,7 @@ class Viewer(GenericWidget):
         self.info_label.setWordWrap(True)
         self.workout_list = []
         self.notification_dict = OrderedDict()
+        self.sub_workout_times = {}
         self.current_index = 0
         self.rest_time = 0
         self.started = False
@@ -90,6 +96,14 @@ class Viewer(GenericWidget):
     @current_index.setter
     def current_index(self, value: int):
         self._current_index = value
+
+    @property
+    def workout_name(self) -> str:
+        return self.workout_name_label.text()
+
+    @workout_name.setter
+    def workout_name(self, value: str):
+        self.workout_name_label.setText(value)
 
     @property
     def current_workout(self) -> Workout:
@@ -192,12 +206,28 @@ class Viewer(GenericWidget):
             self.chip_font = QFont(SANS_SERIF_FONT, int(self.app_size.height() / 36))
         self.resize_scroll_widget()
         self.notification_dict = OrderedDict()
+        self.sub_workout_times = {}
         ref_time = timedelta(hours=0, minutes=0, seconds=0)
 
         # get the times for all the workout items
-        for x in self.workout_chips:
+        for idx, x in enumerate(self.workout_chips):
             time_string = self.delta_to_string(time_delta=ref_time)
-            self.notification_dict[time_string] = x.workout.name
+
+            if x.workout.has_sub_workouts:
+                # Add announcement for each sub-workout
+                for i, sub_workout_name in enumerate(x.workout.sub_workouts):
+                    sub_time_string = self.delta_to_string(
+                        time_delta=ref_time + timedelta(seconds=i * x.workout.sub_workout_duration)
+                    )
+                    self.notification_dict[sub_time_string] = sub_workout_name
+                    # Only add to sub_workout_times if it's NOT the first sub-workout
+                    # (first one is handled in play_workout, not advance_workout)
+                    if i > 0:
+                        self.sub_workout_times[sub_time_string] = (idx, sub_workout_name)
+            else:
+                # Regular workout - single announcement
+                self.notification_dict[time_string] = x.workout.name
+
             ref_time += timedelta(seconds=x.workout.time)
         self.notification_dict[self.delta_to_string(time_delta=ref_time)] = self.end_notification
 
@@ -234,9 +264,21 @@ class Viewer(GenericWidget):
         return f"{hours:02}:{minutes:02}:{seconds:02}"
 
     def advance_workout(self, *args):
-        """Workout item finished."""
+        """Workout item or sub-workout segment finished."""
         self.started = True
-        if args[0] != "00:00:00":
+        time_str = args[0]
+
+        # Check if this is a sub-workout transition
+        if time_str in self.sub_workout_times:
+            workout_idx, sub_workout_name = self.sub_workout_times[time_str]
+            if workout_idx == self.current_index:
+                # Sub-workout transition: announce and update display
+                self.speak(text=f"Starting {sub_workout_name}")
+                self.progress_bar.update_display_name(sub_workout_name)
+            return  # Don't advance to next workout
+
+        # Full workout transition (existing logic)
+        if time_str != "00:00:00":
             self.current_index += 1
         LOGGER.debug(f"time reached: {args}")
         if self.current_index == len(self.workout_list):
@@ -282,8 +324,16 @@ class Viewer(GenericWidget):
             self.progress_bar.setVisible(True)
         else:
             if self.started:  # necessary to distinguish time reached trigger from play/pause trigger
-                speech = f"Starting {self.current_workout.name}"
-                self.speak(text=speech)
+                if self.current_workout.has_sub_workouts:
+                    # Announce first sub-workout
+                    first_sub = self.current_workout.sub_workouts[0]
+                    speech = f"Starting {first_sub}"
+                    self.speak(text=speech)
+                    self.progress_bar.update_display_name(first_sub)
+                else:
+                    # Regular workout announcement
+                    speech = f"Starting {self.current_workout.name}"
+                    self.speak(text=speech)
             self.workout_chips[self.current_index].start()
             description = f"{self.current_workout.description}." if self.current_workout.description else "(no details)"
             self.info = (

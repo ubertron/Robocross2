@@ -6,11 +6,12 @@ from PySide6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QHBoxLayout
 )
 from PySide6.QtCore import QTimer, QTime, Qt, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QIcon, QPixmap
 
 from collections import OrderedDict
 from core.speaker import Speaker, Voice
 from core.logging_utils import get_logger
+from core.core_paths import image_path
 from core import CODE_FONT
 from robocross.robocross_enums import RunMode
 from widgets.generic_widget import GenericWidget
@@ -31,8 +32,23 @@ class Stopwatch(GenericWidget):
         self.completed_targets = []
         self.period: int = period  # evaluation time for stopwatch
         button_bar = self.add_button_bar(spacing=4)
-        self.play_pause_button = button_bar.add_button("Play")
-        self.reset_button = button_bar.add_button("Reset")
+
+        # Create icon buttons
+        self.play_icon = QIcon(QPixmap(str(image_path("play.png"))))
+        self.pause_icon = QIcon(QPixmap(str(image_path("pause.png"))))
+        self.reset_icon = QIcon(QPixmap(str(image_path("reset.png"))))
+
+        self.play_pause_button = button_bar.add_icon_button(
+            icon_path=image_path("play.png"),
+            tool_tip="Play/Pause",
+            size=40
+        )
+        self.reset_button = button_bar.add_icon_button(
+            icon_path=image_path("reset.png"),
+            tool_tip="Reset",
+            size=40
+        )
+
         self.time_label = self.add_label("00:00:00")
         self.time_font = self.default_time_font
         self.elapsed = QTime(0, 0, 0)
@@ -72,12 +88,12 @@ class Stopwatch(GenericWidget):
     def play_pause_button_clicked(self):
         if not self.running:
             self.timer.start(self.period)
-            self.play_pause_button.setText("Pause")
+            self.play_pause_button.setIcon(self.pause_icon)
             self.running = True
             run_mode = RunMode.play
         else:
             self.timer.stop()
-            self.play_pause_button.setText("Play")
+            self.play_pause_button.setIcon(self.play_icon)
             self.running = False
             run_mode = RunMode.paused
         self.play_pause_clicked.emit(run_mode)
@@ -87,7 +103,7 @@ class Stopwatch(GenericWidget):
         self.timer.stop()
         self.elapsed = QTime(0, 0, 0)
         self.time_label.setText("00:00:00")
-        self.play_pause_button.setText("Play")
+        self.play_pause_button.setIcon(self.play_icon)
         self.running = False
         self.completed_targets = []
 

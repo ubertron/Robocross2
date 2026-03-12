@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import getpass
+import json
 import logging
+import re
 import sys
 import time
 
@@ -11,18 +13,18 @@ from pathlib import Path
 
 from PySide6.QtCore import QSettings, QSize
 from PySide6.QtGui import QFont, QPixmap
-from PySide6.QtWidgets import QTabWidget, QSplashScreen
+from PySide6.QtWidgets import QTabWidget, QSplashScreen, QFileDialog
 
 from core import DEVELOPER, logging_utils, splash_screen_manager, SANS_SERIF_FONT, CODE_FONT
 from core.version_info import VersionInfo
 from core import time_utils
-from core.core_paths import image_path
+from core.core_paths import image_path, DATA_DIR
 from robocross import APP_NAME, REST_PERIOD
 from robocross.parameters_widget import ParametersWidget
 from robocross.routine import Routine
 from robocross.viewer import Viewer
 from robocross.workout import Workout
-from robocross.robocross_enums import Equipment
+from robocross.robocross_enums import Equipment, Intensity, AerobicType, Target
 from widgets.generic_widget import GenericWidget
 
 LOG_PATH = Path(__file__).parents[1].joinpath("logs/workouts.log")
@@ -32,9 +34,29 @@ LOGGER = logging_utils.get_logger(name=__name__, level=logging.INFO, handlers=[F
 VERSIONS = (
     VersionInfo(name=APP_NAME, version='1.0', codename='Alpha', info='Initial release'),
     VersionInfo(name=APP_NAME, version='2.0', codename='Colt Seavers', info='Revamp'),
+    VersionInfo(name=APP_NAME, version='2.1', codename='MacGyver', info='Icon buttons, save/load sessions, sub-workouts'),
 )
 SPLASH_SCREEN = image_path("splashscreen_640.png")
 ROBOCROSS_LOGO = image_path("robocross.png")
+
+
+def parse_name_nicely(name: str) -> str:
+    """Parse workout name to be human-readable.
+
+    Handles:
+    - snake_case -> Snake Case
+    - camelCase -> Camel Case
+    - PascalCase -> Pascal Case
+    - kebab-case -> Kebab Case
+    """
+    # Replace underscores and hyphens with spaces
+    name = name.replace('_', ' ').replace('-', ' ')
+
+    # Insert space before capital letters (for camelCase/PascalCase)
+    name = re.sub(r'([a-z])([A-Z])', r'\1 \2', name)
+
+    # Capitalize each word
+    return ' '.join(word.capitalize() for word in name.split())
 
 
 class Robocross(GenericWidget):
@@ -60,8 +82,10 @@ class Robocross(GenericWidget):
         self.setup_ui()
 
     def setup_ui(self):
+        self.parameters_widget.new_workout_clicked.connect(self.new_workout_clicked)
+        self.parameters_widget.load_button_clicked.connect(self.load_button_clicked)
+        self.parameters_widget.save_button_clicked.connect(self.save_button_clicked)
         self.parameters_widget.build_button_clicked.connect(self.build_button_clicked)
-        self.parameters_widget.print_button_clicked.connect(self.print_button_clicked)
         self.setMinimumWidth(self.minimum_width)
         self.viewer.stopwatch.play_pause_button.setEnabled(False)
         self.viewer.stopwatch.reset_button.setEnabled(False)
@@ -147,6 +171,33 @@ class Robocross(GenericWidget):
             f"Workout items:\n{report}"
         )
 
+    def new_workout_clicked(self):
+        """Reset all parameters to start a new workout."""
+        # Reset form to default values via the actual widgets
+        self.form.interval_spin_box.setValue(45)
+        self.form.length_spin_box.setValue(10)
+        self.form.rest_time_spin_box.setValue(30)
+        self.form.nope_list_line_edit.setText("")
+
+        # Check all equipment checkboxes (enable all)
+        for checkbox in self.parameters_widget.equipment_check_boxes:
+            checkbox.setChecked(True)
+
+        # Clear the workout list
+        self.routine = None
+        self.workout_list = []
+
+        # Reset viewer
+        self.viewer.stopwatch.play_pause_button.setEnabled(False)
+        self.viewer.stopwatch.reset_button.setEnabled(False)
+        self.viewer.scroll_widget.setVisible(False)
+        self.viewer.info = 'create a workout'
+        self.viewer.workout_name = "New Workout"
+
+        # Update info
+        self.parameters_widget.info = "New workout started. Configure parameters and click Build."
+        LOGGER.info("New workout started - parameters reset")
+
     def build_button_clicked(self):
         """Create the routine."""
         if self.parameters_widget.zero_equipment:
@@ -164,14 +215,135 @@ class Robocross(GenericWidget):
                 self.viewer.stopwatch.reset_button.setEnabled(True)
                 self.viewer.scroll_widget.setVisible(True)
                 self.viewer.info = 'get ready...'
+                self.viewer.workout_name = "New Workout"
                 LOGGER.info(self.workout_report)
                 self.parameters_widget.info = self.workout_report
             else:
                 self.parameters_widget.info = 'No workouts found.\nPlease select more equipment.'
 
-    def print_button_clicked(self):
-        """Event for print button."""
-        LOGGER.info(self.workout_report)
+    def save_button_clicked(self):
+        """Save the current workout session to a JSON file."""
+        if not self.workout_list:
+            self.parameters_widget.info = "No workout to save. Build a workout first."
+            return
+
+        # Create data directory if it doesn't exist
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+        # Open file dialog to choose save location
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save Workout Session",
+            str(DATA_DIR / f"workout_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"),
+            "JSON Files (*.json)"
+        )
+
+        if file_path:
+            # Save the actual workout list
+            workouts_data = []
+            for workout in self.workout_list:
+                workout_dict = {
+                    "name": workout.name,
+                    "description": workout.description,
+                    "equipment": [eq.name for eq in workout.equipment] if workout.equipment else [],
+                    "intensity": workout.intensity.name,
+                    "aerobic_type": workout.aerobic_type.name,
+                    "target": [t.name for t in workout.target],
+                    "time": workout.time,
+                    "sub_workouts": workout.sub_workouts
+                }
+                workouts_data.append(workout_dict)
+
+            session_data = {
+                "workouts": workouts_data,
+                "rest_time": self.rest_time,
+                "saved_at": self.date_time_string
+            }
+
+            with open(file_path, 'w') as f:
+                json.dump(session_data, f, indent=4)
+
+            self.parameters_widget.info = f"Workout session saved to:\n{file_path}"
+            LOGGER.info(f"Workout session saved to: {file_path}")
+
+    def load_button_clicked(self):
+        """Load a workout session from a JSON file."""
+        # Create data directory if it doesn't exist
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+        # Open file dialog to choose file to load
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Load Workout Session",
+            str(DATA_DIR),
+            "JSON Files (*.json)"
+        )
+
+        if file_path:
+            try:
+                with open(file_path, 'r') as f:
+                    session_data = json.load(f)
+
+                # Load the workout list
+                workouts_data = session_data.get("workouts", [])
+                loaded_workouts = []
+
+                for workout_dict in workouts_data:
+                    equipment_list = [Equipment.__members__.get(eq) for eq in workout_dict.get("equipment", [])]
+                    target_list = [Target.__members__.get(t) for t in workout_dict.get("target", [])]
+
+                    workout = Workout(
+                        name=workout_dict.get("name"),
+                        description=workout_dict.get("description"),
+                        equipment=equipment_list if equipment_list else [],
+                        intensity=Intensity.__members__.get(workout_dict.get("intensity")),
+                        aerobic_type=AerobicType.__members__.get(workout_dict.get("aerobic_type")),
+                        target=target_list,
+                        time=workout_dict.get("time"),
+                        sub_workouts=workout_dict.get("sub_workouts")
+                    )
+                    loaded_workouts.append(workout)
+
+                # Set the workout list
+                self.workout_list = loaded_workouts
+                self.rest_time = session_data.get("rest_time", 30)
+
+                # Enable the player controls
+                self.viewer.stopwatch.play_pause_button.setEnabled(True)
+                self.viewer.stopwatch.reset_button.setEnabled(True)
+                self.viewer.scroll_widget.setVisible(True)
+                self.viewer.info = 'get ready...'
+
+                # Get workout name from filename and set it
+                workout_name = Path(file_path).stem
+                workout_name_nice = parse_name_nicely(workout_name)
+                self.viewer.workout_name = workout_name_nice
+
+                # Build workout items list
+                workout_items = []
+                for workout in loaded_workouts:
+                    if workout.name != REST_PERIOD:
+                        workout_name_parsed = parse_name_nicely(workout.name)
+                        workout_items.append(f"{workout_name_parsed}  ({time_utils.time_nice(workout.time)})")
+
+                # Calculate total time
+                total_time = sum(w.time for w in loaded_workouts)
+
+                # Update info with workout name and items (use <br> for HTML line breaks)
+                items_text = '<br>'.join(workout_items)
+                self.parameters_widget.info = (
+                    f"<b>{workout_name_nice}</b><br><br>"
+                    f"Total time: {time_utils.time_nice(total_time)}<br>"
+                    f"Rest time: {time_utils.time_nice(self.rest_time)}<br>"
+                    f"Exercises: {len(workout_items)}<br><br>"
+                    f"<b>Workout Items:</b><br>{items_text}<br><br>"
+                    f"Go to Player tab to start!"
+                )
+                LOGGER.info(f"Workout session loaded: {workout_name_nice} ({len(workout_items)} exercises)")
+
+            except Exception as e:
+                self.parameters_widget.info = f"Error loading workout session:\n{str(e)}"
+                LOGGER.error(f"Error loading workout session: {e}")
 
     def resizeEvent(self, event):
         """This method is called whenever the widget is resized."""

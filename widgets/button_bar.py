@@ -7,6 +7,7 @@ from typing import Callable
 
 from PySide6.QtWidgets import QHBoxLayout, QPushButton, QSizePolicy, QWidget
 from core.core_enums import Alignment
+from widgets.icon_button import IconButton
 
 class ButtonBar(QWidget):
     def __init__(self, margin: int = 0, spacing: int = 0):
@@ -25,8 +26,12 @@ class ButtonBar(QWidget):
             button.clicked.connect(clicked)
         return self.add_widget(button)
 
-    def add_icon_button(self, image: Path, tool_tip: str, clicked: Callable):
+    def add_icon_button(self, icon_path: Path, tool_tip: str = "", clicked: Callable | None = None, size: int = 40) -> IconButton:
         """Add icon button to the layout"""
+        button = IconButton(icon_path=icon_path, tool_tip=tool_tip, size=size)
+        if clicked:
+            button.clicked.connect(clicked)
+        return self.add_widget(button)
 
     def add_stretch(self):
         """

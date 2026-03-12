@@ -5,6 +5,7 @@ from PySide6.QtCore import Signal, Qt, QSettings
 
 from core import DEVELOPER
 from core.core_enums import Alignment
+from core.core_paths import image_path
 from robocross.robocross_enums import Equipment
 from robocross.workout_form import WorkoutForm
 from widgets.generic_widget import GenericWidget
@@ -14,18 +15,24 @@ from widgets.scroll_widget import ScrollWidget
 class ParametersWidget(GenericWidget):
     """Widget storing the workout parameters."""
 
+    new_workout_clicked = Signal()
+    load_button_clicked = Signal()
+    save_button_clicked = Signal()
     build_button_clicked = Signal()
-    print_button_clicked = Signal()
     title = "Robocross Parameters Widget"
 
     def __init__(self):
         super().__init__(title=self.title)
         self.settings = QSettings(DEVELOPER, self.title)
         self.button_bar = self.add_button_bar()
-        self.button_bar.add_button(text="Build", clicked=self.build_button_clicked.emit,
-                                   tool_tip="Build the workout based on the info")
-        self.button_bar.add_button(text="Save Session")
-        self.button_bar.add_button(text="Print", tool_tip="Print the workout", clicked=self.print_button_clicked.emit)
+        self.button_bar.add_icon_button(icon_path=image_path("new.png"), tool_tip="New workout - reset all parameters",
+                                        clicked=self.new_workout_clicked.emit)
+        self.button_bar.add_icon_button(icon_path=image_path("open.png"), tool_tip="Load saved workout session",
+                                        clicked=self.load_button_clicked.emit)
+        self.button_bar.add_icon_button(icon_path=image_path("save.png"), tool_tip="Save workout session",
+                                        clicked=self.save_button_clicked.emit)
+        self.button_bar.add_icon_button(icon_path=image_path("build.png"), tool_tip="Build the workout based on the info",
+                                        clicked=self.build_button_clicked.emit)
         self.button_bar.add_stretch()
         content_pane = self.add_widget(GenericWidget(alignment=Alignment.horizontal))
         self.form: WorkoutForm = content_pane.add_widget(WorkoutForm(parent_widget=self))

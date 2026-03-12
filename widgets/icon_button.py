@@ -8,7 +8,6 @@ from PySide6.QtCore import QSize, Signal
 from PySide6.QtGui import QPixmap, QIcon
 
 from core.core_paths import image_path
-from widgets.generic_widget import GenericWidget
 
 
 class Icon(QIcon):
@@ -41,6 +40,8 @@ class IconButton(QPushButton):
 
 
 if __name__ == "__main__":
+    from widgets.generic_widget import GenericWidget
+
     app = QApplication()
     widget = GenericWidget("Icon Button Test Widget")
     icon_file_path = image_path("open_grey.png")

@@ -15,6 +15,7 @@ class Workout:
     aerobic_type: AerobicType
     target: list[Target]
     time: int
+    sub_workouts: list[str] | None = None
 
     def __repr__(self):
         return f'{self.name} - time: {self.time} seconds'
@@ -32,6 +33,18 @@ class Workout:
     @property
     def time_nice(self) -> str:
         return time_utils.time_nice(self.time)
+
+    @property
+    def has_sub_workouts(self) -> bool:
+        """Check if this workout has sub-workouts."""
+        return self.sub_workouts is not None and len(self.sub_workouts) > 0
+
+    @property
+    def sub_workout_duration(self) -> int:
+        """Get duration per sub-workout in seconds."""
+        if not self.has_sub_workouts:
+            return self.time
+        return self.time // len(self.sub_workouts)
 
 
 if __name__ == "__main__":

@@ -488,7 +488,11 @@
         "target": [
             "arms"
         ],
-        "energy": 120
+        "energy": 120,
+        "sub_workouts": [
+            "left single arm row",
+            "right single arm row"
+        ]
     },
     "bulgarian squats": {
         "description": "with one foot on a bench, do single leg squats",

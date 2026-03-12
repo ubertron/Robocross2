@@ -1,6 +1,8 @@
 from pathlib import Path
 
-IMAGE_FOLDER = Path(__file__).parents[1] / "images"
+PROJECT_ROOT = Path(__file__).parents[1]
+IMAGE_FOLDER = PROJECT_ROOT / "images"
+DATA_DIR = PROJECT_ROOT / "data"
 
 def image_path(file_name: str) -> Path or None:
     """Searches image directory for path"""

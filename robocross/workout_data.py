@@ -141,6 +141,7 @@ class WorkoutData:
         for name, value in self.filtered_data.items():
             equipment_list = [Equipment.__members__.get(x) for x in value.get("equipment")]
             target_list = [Target.__members__.get(x) for x in value.get("target")]
+            sub_workouts = value.get("sub_workouts")
             workouts.append(
                 Workout(
                     name=name,
@@ -150,6 +151,7 @@ class WorkoutData:
                     aerobic_type=AerobicType.__members__.get(value.get("aerobic_type")),
                     target=target_list,
                     time=DEFAULT_TIME,
+                    sub_workouts=sub_workouts,
                 )
             )
         return workouts
