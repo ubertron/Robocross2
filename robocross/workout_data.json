@@ -275,6 +275,19 @@
         ],
         "energy": 120
     },
+    "push ups": {
+        "description": "push up",
+        "equipment": [
+            "mat"
+        ],
+        "intensity": "high",
+        "aerobic_type": "strength",
+        "target": [
+            "arms",
+            "chest"
+        ],
+        "energy": 120
+    },
     "weighted punches": {
         "description": "continuous punches forward holding weights",
         "equipment": [
@@ -474,6 +487,72 @@
         "aerobic_type": "strength",
         "target": [
             "arms"
+        ],
+        "energy": 120
+    },
+    "bulgarian squats": {
+        "description": "with one foot on a bench, do single leg squats",
+        "equipment": [
+            "bench"
+        ],
+        "intensity": "high",
+        "aerobic_type": "strength",
+        "target": [
+            "legs"
+        ],
+        "energy": 120
+    },
+    "goblet squats": {
+        "description": "hold weight at chest level and squat",
+        "equipment": [
+            "dumbbell"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "legs"
+        ],
+        "energy": 120
+    },
+    "tricep raises": {
+        "description": "hold weight at back of head and raise above head",
+        "equipment": [
+            "dumbbell"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "arms"
+        ],
+        "energy": 120
+    },
+    "pop squats": {
+        "description": "squat then jump up tall",
+        "equipment": [],
+        "intensity": "medium",
+        "aerobic_type": "cardio",
+        "target": [
+            "legs"
+        ],
+        "energy": 120
+    },
+    "cross punches": {
+        "description": "in a squat stance, alternate cross punches in either direction",
+        "equipment": [],
+        "intensity": "medium",
+        "aerobic_type": "cardio",
+        "target": [
+            "legs"
+        ],
+        "energy": 120
+    },
+    "toe touches": {
+        "description": "arms parallel, bend at the hip and touch toes alternately",
+        "equipment": [],
+        "intensity": "medium",
+        "aerobic_type": "cardio",
+        "target": [
+            "full_body"
         ],
         "energy": 120
     }
