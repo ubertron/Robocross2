@@ -61,6 +61,7 @@ def parse_name_nicely(name: str) -> str:
 
 class Robocross(GenericWidget):
     app_size_key = "app_size"
+    last_workout_path_key = "last_workout_path"
     default_size = QSize(800, 400)
     minimum_width = 640
 
@@ -91,6 +92,9 @@ class Robocross(GenericWidget):
         self.viewer.stopwatch.reset_button.setEnabled(False)
         self.viewer.scroll_widget.setVisible(False)
         self.resize(self.app_size)
+
+        # Auto-load the last workout if available
+        self._auto_load_last_workout()
 
     @property
     def app_size(self) -> QSize:
@@ -171,6 +175,60 @@ class Robocross(GenericWidget):
             f"Workout items:\n{report}"
         )
 
+    def _auto_load_last_workout(self):
+        """Auto-load the last opened workout on startup."""
+        last_workout_path = self.settings.value(self.last_workout_path_key)
+        LOGGER.info(f"Attempting auto-load. Last workout path from settings: {last_workout_path}")
+
+        if last_workout_path:
+            workout_path = Path(last_workout_path)
+            if workout_path.exists():
+                LOGGER.info(f"Auto-loading last workout: {workout_path}")
+                self._load_workout_from_file(str(workout_path), show_info=True)
+            else:
+                LOGGER.warning(f"Last workout path not found: {workout_path}")
+        else:
+            LOGGER.info("No last workout path found in settings")
+
+    def _save_temp_workout(self):
+        """Save the current workout to a temporary file for auto-loading."""
+        if not self.workout_list:
+            return
+
+        # Create data directory if it doesn't exist
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+        # Use a fixed temp file name
+        temp_file_path = DATA_DIR / "_last_workout_temp.json"
+
+        # Save the actual workout list
+        workouts_data = []
+        for workout in self.workout_list:
+            workout_dict = {
+                "name": workout.name,
+                "description": workout.description,
+                "equipment": [eq.name for eq in workout.equipment] if workout.equipment else [],
+                "intensity": workout.intensity.name,
+                "aerobic_type": workout.aerobic_type.name,
+                "target": [t.name for t in workout.target],
+                "time": workout.time,
+                "sub_workouts": workout.sub_workouts
+            }
+            workouts_data.append(workout_dict)
+
+        session_data = {
+            "workouts": workouts_data,
+            "rest_time": self.rest_time,
+            "saved_at": self.date_time_string
+        }
+
+        with open(temp_file_path, 'w') as f:
+            json.dump(session_data, f, indent=4)
+
+        # Save this as the last opened workout
+        self.settings.setValue(self.last_workout_path_key, str(temp_file_path))
+        LOGGER.debug(f"Temp workout saved to: {temp_file_path}")
+
     def new_workout_clicked(self):
         """Reset all parameters to start a new workout."""
         # Reset form to default values via the actual widgets
@@ -218,6 +276,9 @@ class Robocross(GenericWidget):
                 self.viewer.workout_name = "New Workout"
                 LOGGER.info(self.workout_report)
                 self.parameters_widget.info = self.workout_report
+
+                # Save the built workout to a temp file so it can be auto-loaded
+                self._save_temp_workout()
             else:
                 self.parameters_widget.info = 'No workouts found.\nPlease select more equipment.'
 
@@ -266,59 +327,57 @@ class Robocross(GenericWidget):
             self.parameters_widget.info = f"Workout session saved to:\n{file_path}"
             LOGGER.info(f"Workout session saved to: {file_path}")
 
-    def load_button_clicked(self):
-        """Load a workout session from a JSON file."""
-        # Create data directory if it doesn't exist
-        DATA_DIR.mkdir(parents=True, exist_ok=True)
+    def _load_workout_from_file(self, file_path: str, show_info: bool = True):
+        """Load a workout from a file path.
 
-        # Open file dialog to choose file to load
-        file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Load Workout Session",
-            str(DATA_DIR),
-            "JSON Files (*.json)"
-        )
+        Args:
+            file_path: Path to the JSON workout file
+            show_info: Whether to show info in the parameters widget
+        """
+        LOGGER.info(f"_load_workout_from_file called with: {file_path}, show_info={show_info}")
+        try:
+            with open(file_path, 'r') as f:
+                session_data = json.load(f)
+            LOGGER.info(f"Successfully loaded JSON from {file_path}")
 
-        if file_path:
-            try:
-                with open(file_path, 'r') as f:
-                    session_data = json.load(f)
+            # Load the workout list
+            workouts_data = session_data.get("workouts", [])
+            loaded_workouts = []
 
-                # Load the workout list
-                workouts_data = session_data.get("workouts", [])
-                loaded_workouts = []
+            for workout_dict in workouts_data:
+                equipment_list = [Equipment.__members__.get(eq) for eq in workout_dict.get("equipment", [])]
+                target_list = [Target.__members__.get(t) for t in workout_dict.get("target", [])]
 
-                for workout_dict in workouts_data:
-                    equipment_list = [Equipment.__members__.get(eq) for eq in workout_dict.get("equipment", [])]
-                    target_list = [Target.__members__.get(t) for t in workout_dict.get("target", [])]
+                workout = Workout(
+                    name=workout_dict.get("name"),
+                    description=workout_dict.get("description"),
+                    equipment=equipment_list if equipment_list else [],
+                    intensity=Intensity.__members__.get(workout_dict.get("intensity")),
+                    aerobic_type=AerobicType.__members__.get(workout_dict.get("aerobic_type")),
+                    target=target_list,
+                    time=workout_dict.get("time"),
+                    sub_workouts=workout_dict.get("sub_workouts")
+                )
+                loaded_workouts.append(workout)
 
-                    workout = Workout(
-                        name=workout_dict.get("name"),
-                        description=workout_dict.get("description"),
-                        equipment=equipment_list if equipment_list else [],
-                        intensity=Intensity.__members__.get(workout_dict.get("intensity")),
-                        aerobic_type=AerobicType.__members__.get(workout_dict.get("aerobic_type")),
-                        target=target_list,
-                        time=workout_dict.get("time"),
-                        sub_workouts=workout_dict.get("sub_workouts")
-                    )
-                    loaded_workouts.append(workout)
+            # Set the workout list
+            self.workout_list = loaded_workouts
+            self.rest_time = session_data.get("rest_time", 30)
+            LOGGER.info(f"Workout list set with {len(loaded_workouts)} workouts")
 
-                # Set the workout list
-                self.workout_list = loaded_workouts
-                self.rest_time = session_data.get("rest_time", 30)
+            # Enable the player controls
+            self.viewer.stopwatch.play_pause_button.setEnabled(True)
+            self.viewer.stopwatch.reset_button.setEnabled(True)
+            self.viewer.scroll_widget.setVisible(True)
+            self.viewer.info = 'get ready...'
+            LOGGER.info("Player controls enabled")
 
-                # Enable the player controls
-                self.viewer.stopwatch.play_pause_button.setEnabled(True)
-                self.viewer.stopwatch.reset_button.setEnabled(True)
-                self.viewer.scroll_widget.setVisible(True)
-                self.viewer.info = 'get ready...'
+            # Get workout name from filename and set it
+            workout_name = Path(file_path).stem
+            workout_name_nice = parse_name_nicely(workout_name)
+            self.viewer.workout_name = workout_name_nice
 
-                # Get workout name from filename and set it
-                workout_name = Path(file_path).stem
-                workout_name_nice = parse_name_nicely(workout_name)
-                self.viewer.workout_name = workout_name_nice
-
+            if show_info:
                 # Build workout items list
                 workout_items = []
                 for workout in loaded_workouts:
@@ -341,9 +400,29 @@ class Robocross(GenericWidget):
                 )
                 LOGGER.info(f"Workout session loaded: {workout_name_nice} ({len(workout_items)} exercises)")
 
-            except Exception as e:
+            # Save this as the last opened workout
+            self.settings.setValue(self.last_workout_path_key, file_path)
+
+        except Exception as e:
+            if show_info:
                 self.parameters_widget.info = f"Error loading workout session:\n{str(e)}"
-                LOGGER.error(f"Error loading workout session: {e}")
+            LOGGER.error(f"Error loading workout session from {file_path}: {e}")
+
+    def load_button_clicked(self):
+        """Load a workout session from a JSON file."""
+        # Create data directory if it doesn't exist
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+        # Open file dialog to choose file to load
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Load Workout Session",
+            str(DATA_DIR),
+            "JSON Files (*.json)"
+        )
+
+        if file_path:
+            self._load_workout_from_file(file_path, show_info=True)
 
     def resizeEvent(self, event):
         """This method is called whenever the widget is resized."""

@@ -46,7 +46,7 @@ class Viewer(GenericWidget):
         self.vertical_pane = horizontal_pane.add_widget(GenericWidget(alignment=Alignment.vertical, margin=0, spacing=0))
         self.workout_name_label = self.vertical_pane.add_label("New Workout")
         self.workout_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.workout_name_label.setStyleSheet("font-weight: bold; font-size: 24pt;")
+        self.workout_name_label.setStyleSheet("font-weight: bold; font-size: 36pt;")
         self.workout_name_label.setContentsMargins(10, 10, 10, 10)
         self.workout_name_label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         self.stopwatch: Stopwatch = self.vertical_pane.add_widget(Stopwatch(period=self.period))

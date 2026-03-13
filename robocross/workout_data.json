@@ -559,5 +559,17 @@
             "full_body"
         ],
         "energy": 120
+    },
+    "hip bend": {
+        "description": "hold weights at the front, legs straight, bend forward at the hip",
+        "equipment": [
+            "dumbbell"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "back"
+        ],
+        "energy": 120
     }
 }
