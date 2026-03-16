@@ -9,7 +9,7 @@
         "target": [
             "full_body"
         ],
-        "energy": 120
+        "energy": 16.8
     },
     "shuttle runs with weight swap": {
         "description": "at the end of each shuttle, swap to a different heavy object",
@@ -22,7 +22,7 @@
         "target": [
             "full_body"
         ],
-        "energy": 120
+        "energy": 16.8
     },
     "spot running": {
         "description": "run on the spot - optionally, you can hold weights.",
@@ -32,7 +32,7 @@
         "target": [
             "full_body"
         ],
-        "energy": 120
+        "energy": 14.0
     },
     "high knees": {
         "description": "alternate high knees - optionally, you can hold weights.",
@@ -42,7 +42,7 @@
         "target": [
             "full_body"
         ],
-        "energy": 120
+        "energy": 14.0
     },
     "reverse flies standing": {
         "description": "stand bending forward, raise weights laterally",
@@ -52,9 +52,10 @@
         "intensity": "medium",
         "aerobic_type": "strength",
         "target": [
-            "back"
+            "back",
+            "shoulders"
         ],
-        "energy": 120
+        "energy": 5.6
     },
     "jumping jacks": {
         "description": "standing up straight, jump to star posture, then back to straight",
@@ -64,7 +65,7 @@
         "target": [
             "full_body"
         ],
-        "energy": 120
+        "energy": 14.0
     },
     "dumbbell flies": {
         "description": "lie on bench back-facing, raise dumbbells vertically from the side",
@@ -77,7 +78,7 @@
         "target": [
             "chest"
         ],
-        "energy": 120
+        "energy": 5.6
     },
     "skipping": {
         "description": "use jump rope continuously",
@@ -89,7 +90,7 @@
         "target": [
             "full_body"
         ],
-        "energy": 120
+        "energy": 16.8
     },
     "lunges": {
         "description": "alternate steps forward with weights",
@@ -102,7 +103,7 @@
         "target": [
             "legs"
         ],
-        "energy": 120
+        "energy": 8.4
     },
     "three point shoulder raise": {
         "description": "raise dumbbells to front, rotate to side, then lower",
@@ -114,7 +115,7 @@
         "target": [
             "shoulders"
         ],
-        "energy": 120
+        "energy": 5.6
     },
     "three point shoulder raise reversed": {
         "description": "raise dumbbells to side, rotate to front, then lower",
@@ -126,7 +127,7 @@
         "target": [
             "shoulders"
         ],
-        "energy": 120
+        "energy": 5.6
     },
     "crunches": {
         "description": "lie on back and reach forward, bending at the hip",
@@ -138,7 +139,7 @@
         "target": [
             "abdominals"
         ],
-        "energy": 300
+        "energy": 5.6
     },
     "russian twists": {
         "description": "lie on back with legs raised, plant a weight on alternate sides",
@@ -150,7 +151,7 @@
         "target": [
             "abdominals"
         ],
-        "energy": 120
+        "energy": 7.0
     },
     "squats": {
         "description": "start standing holding weights, bend legs to low position keeping back straight",
@@ -162,7 +163,7 @@
         "target": [
             "legs"
         ],
-        "energy": 120
+        "energy": 8.4
     },
     "kettle bell swings": {
         "description": "thrust quads to raise kettle bells to chest height",
@@ -174,7 +175,7 @@
         "target": [
             "full_body"
         ],
-        "energy": 120
+        "energy": 9.8
     },
     "curl and press": {
         "description": "standing curl with shoulder press",
@@ -184,9 +185,10 @@
         "intensity": "medium",
         "aerobic_type": "strength",
         "target": [
-            "upper_body"
+            "arms",
+            "shoulders"
         ],
-        "energy": 120
+        "energy": 7.0
     },
     "dumbbell curls": {
         "description": "standing curl",
@@ -196,9 +198,9 @@
         "intensity": "medium",
         "aerobic_type": "strength",
         "target": [
-            "upper_body"
+            "arms"
         ],
-        "energy": 120
+        "energy": 5.6
     },
     "tricep kickbacks": {
         "description": "standing bent at the waist, raise dumbbells to horizontal",
@@ -210,7 +212,7 @@
         "target": [
             "arms"
         ],
-        "energy": 120
+        "energy": 5.6
     },
     "oblique twist": {
         "description": "standing bent at the waist with bo staff at shoulder level, twist to alternate sides",
@@ -223,7 +225,7 @@
             "abdominals",
             "obliques"
         ],
-        "energy": 120
+        "energy": 5.6
     },
     "bicycle crunches": {
         "description": "lying on back, rotate legs forward in a circular motion",
@@ -235,7 +237,7 @@
         "target": [
             "abdominals"
         ],
-        "energy": 300
+        "energy": 11.2
     },
     "bench press": {
         "description": "lying on back, raise weights vertically",
@@ -249,7 +251,7 @@
         "target": [
             "chest"
         ],
-        "energy": 200
+        "energy": 8.4
     },
     "medicine ball slams": {
         "description": "raise medicine ball overhead, then slam to ground",
@@ -261,7 +263,7 @@
         "target": [
             "full_body"
         ],
-        "energy": 120
+        "energy": 9.8
     },
     "burpees": {
         "description": "push up, squat thrust, star jump",
@@ -273,7 +275,7 @@
         "target": [
             "full_body"
         ],
-        "energy": 120
+        "energy": 16.8
     },
     "push ups": {
         "description": "push up",
@@ -286,7 +288,7 @@
             "arms",
             "chest"
         ],
-        "energy": 120
+        "energy": 8.4
     },
     "weighted punches": {
         "description": "continuous punches forward holding weights",
@@ -298,7 +300,7 @@
         "target": [
             "arms"
         ],
-        "energy": 120
+        "energy": 14.0
     },
     "plank": {
         "description": "facing down with elbows on the floor, hold a straight position",
@@ -310,7 +312,7 @@
         "target": [
             "abdominals"
         ],
-        "energy": 125
+        "energy": 4.2
     },
     "shoulder press": {
         "description": "standing up, hold dumbbells at shoulder level and raise vertically",
@@ -323,7 +325,7 @@
             "shoulders",
             "arms"
         ],
-        "energy": 100
+        "energy": 7.0
     },
     "squat thrusts": {
         "description": "bent forward with hands on the ground, jump out, then back in",
@@ -333,7 +335,7 @@
         "target": [
             "full_body"
         ],
-        "energy": 500
+        "energy": 16.8
     },
     "lateral raises": {
         "description": "standing up, raise dumbbells laterally",
@@ -346,7 +348,7 @@
             "shoulders",
             "arms"
         ],
-        "energy": 120
+        "energy": 5.6
     },
     "front raises": {
         "description": "standing up, raise dumbbells to the front",
@@ -359,7 +361,7 @@
             "shoulders",
             "arms"
         ],
-        "energy": 120
+        "energy": 5.6
     },
     "knee raise with twist": {
         "description": "alternate raising the  knee to touch the opposite elbow",
@@ -370,7 +372,7 @@
             "obliques",
             "abdominals"
         ],
-        "energy": 120
+        "energy": 9.8
     },
     "knee raise with hand clap": {
         "description": "alternate raising the  knee touching your palms under the raised leg",
@@ -378,10 +380,10 @@
         "intensity": "medium",
         "aerobic_type": "cardio",
         "target": [
-            "shoulders",
-            "arms"
+            "legs",
+            "abdominals"
         ],
-        "energy": 120
+        "energy": 9.8
     },
     "preacher curls": {
         "description": "sit backwards on a chair and curl dumbbells over the back of the seat",
@@ -393,7 +395,7 @@
         "target": [
             "arms"
         ],
-        "energy": 125
+        "energy": 5.6
     },
     "shrugs": {
         "description": "hold dumbbells low while raising and dropping shoulders",
@@ -403,9 +405,9 @@
         "intensity": "medium",
         "aerobic_type": "strength",
         "target": [
-            "arms"
+            "shoulders"
         ],
-        "energy": 180
+        "energy": 5.6
     },
     "step jumps": {
         "description": "stand with one foot in front of the other, then jump to alternate",
@@ -415,7 +417,7 @@
         "target": [
             "legs"
         ],
-        "energy": 120
+        "energy": 9.8
     },
     "medicine ball swings": {
         "description": "stand bent forward with a medicine ball, alternate swings from side to side",
@@ -427,22 +429,22 @@
         "target": [
             "obliques"
         ],
-        "energy": 120
+        "energy": 7.0
     },
     "leg raises": {
-        "description": "stand bent forward with a medicine ball, alternate swings from side to side",
+        "description": "lying on back or mat, raise legs vertically keeping them straight",
         "equipment": [
             "mat"
         ],
         "intensity": "medium",
         "aerobic_type": "strength",
         "target": [
-            "legs"
+            "abdominals"
         ],
-        "energy": 120
+        "energy": 7.0
     },
     "lateral pull-downs": {
-        "description": "stand bent forward with a medicine ball, alternate swings from side to side",
+        "description": "seated or standing, pull cable bar down from overhead to chest level",
         "equipment": [
             "cable_machine"
         ],
@@ -451,7 +453,7 @@
         "target": [
             "back"
         ],
-        "energy": 120
+        "energy": 7.0
     },
     "step lunges": {
         "description": "take deep steps forward, while holding weights",
@@ -463,7 +465,7 @@
         "target": [
             "legs"
         ],
-        "energy": 120
+        "energy": 8.4
     },
     "reverse lunges": {
         "description": "take alternate deep steps backwards, while holding weights",
@@ -475,7 +477,7 @@
         "target": [
             "legs"
         ],
-        "energy": 120
+        "energy": 8.4
     },
     "single arm row": {
         "description": "with one knee on the bench, raise a dumbbell vertically with the opposite arm",
@@ -486,9 +488,10 @@
         "intensity": "medium",
         "aerobic_type": "strength",
         "target": [
+            "back",
             "arms"
         ],
-        "energy": 120,
+        "energy": 7.0,
         "sub_workouts": [
             "left single arm row",
             "right single arm row"
@@ -504,7 +507,7 @@
         "target": [
             "legs"
         ],
-        "energy": 120
+        "energy": 8.4
     },
     "goblet squats": {
         "description": "hold weight at chest level and squat",
@@ -516,7 +519,7 @@
         "target": [
             "legs"
         ],
-        "energy": 120
+        "energy": 8.4
     },
     "tricep raises": {
         "description": "hold weight at back of head and raise above head",
@@ -528,7 +531,7 @@
         "target": [
             "arms"
         ],
-        "energy": 120
+        "energy": 5.6
     },
     "pop squats": {
         "description": "squat then jump up tall",
@@ -538,7 +541,7 @@
         "target": [
             "legs"
         ],
-        "energy": 120
+        "energy": 11.2
     },
     "cross punches": {
         "description": "in a squat stance, alternate cross punches in either direction",
@@ -546,9 +549,11 @@
         "intensity": "medium",
         "aerobic_type": "cardio",
         "target": [
+            "arms",
+            "abdominals",
             "legs"
         ],
-        "energy": 120
+        "energy": 9.8
     },
     "toe touches": {
         "description": "arms parallel, bend at the hip and touch toes alternately",
@@ -558,7 +563,7 @@
         "target": [
             "full_body"
         ],
-        "energy": 120
+        "energy": 8.4
     },
     "hip bend": {
         "description": "hold weights at the front, legs straight, bend forward at the hip",
@@ -570,6 +575,382 @@
         "target": [
             "back"
         ],
-        "energy": 120
+        "energy": 7.0
+    },
+    "deadlifts": {
+        "description": "standing with barbell on ground, lift by extending hips and knees",
+        "equipment": [
+            "barbell"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "back",
+            "legs"
+        ],
+        "energy": 8.4
+    },
+    "bent-over rows": {
+        "description": "bent forward at hip, pull barbell to chest",
+        "equipment": [
+            "barbell"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "back",
+            "arms"
+        ],
+        "energy": 7.0
+    },
+    "romanian deadlifts": {
+        "description": "standing with barbell, lower by hinging at hips with slight knee bend",
+        "equipment": [
+            "barbell"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "back",
+            "legs"
+        ],
+        "energy": 8.4
+    },
+    "upright rows": {
+        "description": "standing, pull barbell vertically along body to chin level",
+        "equipment": [
+            "barbell",
+            "dumbbell"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "shoulders",
+            "arms"
+        ],
+        "energy": 5.6
+    },
+    "hammer curls": {
+        "description": "standing curl with palms facing inward",
+        "equipment": [
+            "dumbbell"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "arms"
+        ],
+        "energy": 5.6
+    },
+    "arnold press": {
+        "description": "seated or standing, rotate dumbbells while pressing overhead",
+        "equipment": [
+            "dumbbell"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "shoulders",
+            "arms"
+        ],
+        "energy": 7.0
+    },
+    "dumbbell pullover": {
+        "description": "lying on bench, lower dumbbell overhead then pull back over chest",
+        "equipment": [
+            "dumbbell",
+            "bench"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "chest",
+            "back"
+        ],
+        "energy": 7.0
+    },
+    "concentration curls": {
+        "description": "seated, curl dumbbell with elbow braced on thigh",
+        "equipment": [
+            "dumbbell",
+            "chair"
+        ],
+        "intensity": "low",
+        "aerobic_type": "strength",
+        "target": [
+            "arms"
+        ],
+        "energy": 4.2
+    },
+    "overhead tricep extensions": {
+        "description": "standing or seated, lower weight behind head then extend overhead",
+        "equipment": [
+            "dumbbell"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "arms"
+        ],
+        "energy": 5.6
+    },
+    "dumbbell snatches": {
+        "description": "explosive lift from ground to overhead in one motion",
+        "equipment": [
+            "dumbbell"
+        ],
+        "intensity": "high",
+        "aerobic_type": "strength",
+        "target": [
+            "full_body"
+        ],
+        "energy": 11.2
+    },
+    "farmers walk": {
+        "description": "hold heavy dumbbells and walk forward",
+        "equipment": [
+            "dumbbell"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "full_body"
+        ],
+        "energy": 7.0
+    },
+    "renegade rows": {
+        "description": "plank position, alternate rowing dumbbells",
+        "equipment": [
+            "dumbbell",
+            "mat"
+        ],
+        "intensity": "high",
+        "aerobic_type": "strength",
+        "target": [
+            "back",
+            "arms",
+            "abdominals"
+        ],
+        "energy": 8.4
+    },
+    "mountain climbers": {
+        "description": "plank position, alternate driving knees to chest rapidly",
+        "equipment": [
+            "mat"
+        ],
+        "intensity": "high",
+        "aerobic_type": "cardio",
+        "target": [
+            "full_body"
+        ],
+        "energy": 14.0
+    },
+    "diamond push-ups": {
+        "description": "push-ups with hands forming diamond shape",
+        "equipment": [
+            "mat"
+        ],
+        "intensity": "high",
+        "aerobic_type": "strength",
+        "target": [
+            "arms",
+            "chest"
+        ],
+        "energy": 8.4
+    },
+    "side plank": {
+        "description": "lying on side, hold body straight supported by forearm",
+        "equipment": [
+            "mat"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "abdominals",
+            "obliques"
+        ],
+        "energy": 4.2
+    },
+    "reverse crunches": {
+        "description": "lying on back, bring knees to chest",
+        "equipment": [
+            "mat"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "abdominals"
+        ],
+        "energy": 7.0
+    },
+    "flutter kicks": {
+        "description": "lying on back, alternate small rapid leg raises",
+        "equipment": [
+            "mat"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "abdominals"
+        ],
+        "energy": 7.0
+    },
+    "superman holds": {
+        "description": "lying face down, raise arms and legs simultaneously",
+        "equipment": [
+            "mat"
+        ],
+        "intensity": "low",
+        "aerobic_type": "strength",
+        "target": [
+            "back"
+        ],
+        "energy": 4.2
+    },
+    "jump squats": {
+        "description": "squat then explosively jump upward",
+        "equipment": [],
+        "intensity": "high",
+        "aerobic_type": "cardio",
+        "target": [
+            "legs"
+        ],
+        "energy": 14.0
+    },
+    "wall sits": {
+        "description": "back against wall, hold squat position",
+        "equipment": [],
+        "intensity": "low",
+        "aerobic_type": "strength",
+        "target": [
+            "legs"
+        ],
+        "energy": 5.6
+    },
+    "calf raises": {
+        "description": "standing, raise up on toes",
+        "equipment": [
+            "dumbbell"
+        ],
+        "intensity": "low",
+        "aerobic_type": "strength",
+        "target": [
+            "legs"
+        ],
+        "energy": 4.2
+    },
+    "tricep dips": {
+        "description": "hands on chair or bench behind, lower and raise body",
+        "equipment": [
+            "chair",
+            "bench"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "arms",
+            "chest"
+        ],
+        "energy": 7.0
+    },
+    "box jumps": {
+        "description": "jump onto bench from standing position",
+        "equipment": [
+            "bench"
+        ],
+        "intensity": "high",
+        "aerobic_type": "cardio",
+        "target": [
+            "legs"
+        ],
+        "energy": 14.0
+    },
+    "step-ups": {
+        "description": "alternate stepping up onto bench",
+        "equipment": [
+            "bench"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "cardio",
+        "target": [
+            "legs"
+        ],
+        "energy": 9.8
+    },
+    "medicine ball wall throws": {
+        "description": "throw medicine ball against wall and catch",
+        "equipment": [
+            "medicine_ball"
+        ],
+        "intensity": "high",
+        "aerobic_type": "cardio",
+        "target": [
+            "full_body"
+        ],
+        "energy": 11.2
+    },
+    "medicine ball russian twists": {
+        "description": "seated position, rotate medicine ball side to side",
+        "equipment": [
+            "medicine_ball",
+            "mat"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "abdominals",
+            "obliques"
+        ],
+        "energy": 7.0
+    },
+    "kettlebell clean and press": {
+        "description": "explosive pull of kettlebell to shoulder then press overhead",
+        "equipment": [
+            "kettle_bell"
+        ],
+        "intensity": "high",
+        "aerobic_type": "strength",
+        "target": [
+            "full_body"
+        ],
+        "energy": 9.8
+    },
+    "turkish get-ups": {
+        "description": "lying down with kettlebell, stand up while keeping weight overhead",
+        "equipment": [
+            "kettle_bell",
+            "mat"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "full_body"
+        ],
+        "energy": 8.4
+    },
+    "cable rows": {
+        "description": "seated or standing, pull cable to torso",
+        "equipment": [
+            "cable_machine"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "back",
+            "arms"
+        ],
+        "energy": 7.0
+    },
+    "cable tricep pushdowns": {
+        "description": "standing, push cable bar down by extending elbows",
+        "equipment": [
+            "cable_machine"
+        ],
+        "intensity": "medium",
+        "aerobic_type": "strength",
+        "target": [
+            "arms"
+        ],
+        "energy": 5.6
     }
 }
