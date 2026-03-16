@@ -212,15 +212,16 @@ __marimo__/
 .LSOverride
 
 # Robocross specific
-data/          # User workout files - don't commit personal data
-media/         # Large media files
+data/
+media/
+core/test.aiff
 
 # Design source files and unused image variants
-*.xcf                           # GIMP source files
-*.af                            # Affinity Designer source files
-/images/splashscreen.png        # Full size unused variant
-/images/splashscreen_.png       # Duplicate/backup unused variant
-/images/splashscreen_320.png    # Small unused variant
-/images/splashscreen_480.png    # Medium unused variant
-/images/splashscreen__640.png   # Alternate unused variant
-/images/robocross_2_3.png       # Unused logo variant
+*.xcf
+*.af
+/images/splashscreen.png
+/images/splashscreen_.png
+/images/splashscreen_320.png
+/images/splashscreen_480.png
+/images/splashscreen__640.png
+/images/robocross_2_3.png
