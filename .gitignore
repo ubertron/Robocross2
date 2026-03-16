@@ -173,7 +173,7 @@ cython_debug/
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+.idea/
 
 # Abstra
 # Abstra is an AI-powered process automation framework.
@@ -205,3 +205,22 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Robocross specific
+data/          # User workout files - don't commit personal data
+media/         # Large media files
+
+# Design source files and unused image variants
+*.xcf                           # GIMP source files
+*.af                            # Affinity Designer source files
+/images/splashscreen.png        # Full size unused variant
+/images/splashscreen_.png       # Duplicate/backup unused variant
+/images/splashscreen_320.png    # Small unused variant
+/images/splashscreen_480.png    # Medium unused variant
+/images/splashscreen__640.png   # Alternate unused variant
+/images/robocross_2_3.png       # Unused logo variant
