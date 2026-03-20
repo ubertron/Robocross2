@@ -31,6 +31,9 @@ class WorkoutEditorRow(GenericWidget):
         # Set layout alignment to center vertically
         self.layout().setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
+        # Add spacing between buttons
+        self.layout().setSpacing(4)
+
         # Fixed height for all widgets to ensure alignment
         widget_height = 30
 
@@ -74,6 +77,28 @@ class WorkoutEditorRow(GenericWidget):
         """Update exercise button text with nicely formatted name."""
         nice_name = self.workout.name.replace('_', ' ').title()
         self.exercise_button.setText(nice_name)
+        self.update_exercise_button_color()
+
+    def update_exercise_button_color(self):
+        """Update exercise button background color based on category."""
+        from robocross import get_category_color, get_contrast_text_color
+
+        category = self.workout.aerobic_type.name
+        bg_color = get_category_color(category)
+        text_color = get_contrast_text_color(bg_color)
+
+        self.exercise_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {bg_color};
+                color: {text_color};
+                border: 1px solid #555;
+                padding: 5px;
+            }}
+            QPushButton:hover {{
+                background-color: {bg_color};
+                border: 2px solid #000;
+            }}
+        """)
 
     def update_duration_button_text(self):
         """Update duration button text to show human-readable time."""

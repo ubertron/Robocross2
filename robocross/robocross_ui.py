@@ -36,6 +36,7 @@ VERSIONS = (
     VersionInfo(name=APP_NAME, version='2.0', codename='Colt Seavers', info='Revamp'),
     VersionInfo(name=APP_NAME, version='2.1', codename='MacGyver', info='Icon buttons, save/load sessions, sub-workouts'),
     VersionInfo(name=APP_NAME, version='2.2', codename='Michael Knight', info='Full workout editor with editable table'),
+    VersionInfo(name=APP_NAME, version='2.3', codename='Mr. Miyagi', info='Combat & flexibility categories, Random/Sequence modes'),
 )
 SPLASH_SCREEN = image_path("splashscreen_640.png")
 ROBOCROSS_LOGO = image_path("robocross.png")
@@ -149,7 +150,7 @@ class Robocross(GenericWidget):
     @routine.setter
     def routine(self, routine: Routine | None):
         self._routine = routine
-        workout_list = routine.get_workout_list(self.form.workout_type) if routine else []
+        workout_list = routine.get_workout_list() if routine else []
         self.workout_list = workout_list
         if routine:
             self.rest_time = routine.rest_time
@@ -221,6 +222,8 @@ class Robocross(GenericWidget):
             workouts_data.append(workout_dict)
 
         session_data = {
+            "workout_name": self.form.workout_name,  # NEW: Save workout name for auto-load
+            "workout_cycles": self.form.workout_cycles,  # NEW: Save circuit cycles
             "workouts": workouts_data,
             "rest_time": self.rest_time,
             "saved_at": self.date_time_string
@@ -239,7 +242,6 @@ class Robocross(GenericWidget):
         self.form.interval_spin_box.setValue(45)
         self.form.length_spin_box.setValue(10)
         self.form.rest_time_spin_box.setValue(30)
-        self.form.nope_list_line_edit.setText("")
         self.form.workout_name_line_edit.setText("")
 
         # Check all equipment checkboxes (enable all)
@@ -292,8 +294,9 @@ class Robocross(GenericWidget):
                     interval=self.form.interval,
                     workout_length=self.form.length,
                     rest_time=self.form.rest_time,
-                    nope_list=self.form.nope_list,
                     equipment_filter=self.parameters_widget.equipment_filter,
+                    selected_categories=self.form.selected_categories,
+                    workout_structure=self.form.workout_structure,
                 )
 
                 if self.workout_list:
@@ -308,8 +311,22 @@ class Robocross(GenericWidget):
                     self.viewer.stopwatch.play_pause_button.setEnabled(True)
                     self.viewer.stopwatch.reset_button.setEnabled(True)
                     self.viewer.scroll_widget.setVisible(True)
-                    self.viewer.info = 'get ready...'
+
+                    # Show first workout's description instead of just "get ready..."
+                    if self.viewer.workout_list and len(self.viewer.workout_list) > 0:
+                        first_workout = self.viewer.workout_list[0]
+                        description = f"{first_workout.description}." if first_workout.description else "(no details)"
+                        self.viewer.info = (
+                            f"<span style='font-weight: bold;'>Ready to start</span><br />"
+                            f"<span style='font-style:italic'>First exercise: {first_workout.name.replace('_', ' ').title()}</span><br />"
+                            f"<span style='font-style:italic'>Duration: {first_workout.time_nice}</span><br /><br />"
+                            f"{description.capitalize()}"
+                        )
+                    else:
+                        self.viewer.info = 'get ready...'
+
                     self.viewer.workout_name = self.form.workout_name or "New Workout"
+                    self.viewer.workout_cycles = self.form.workout_cycles  # NEW: Set circuit cycles on viewer
 
                     LOGGER.info(self.workout_report)
 
@@ -341,13 +358,34 @@ class Robocross(GenericWidget):
         """Handle workout list changes from editor table."""
         # Update the main workout list from editor
         workouts, rest_times = self.parameters_widget.get_workout_list()
+        LOGGER.info(f"on_workout_list_changed triggered: {len(workouts)} workouts from editor, {len(self.parameters_widget.editor_table.rows)} rows in table")
         if workouts:
-            self.workout_list = workouts
+            # Reconstruct workout list with REST_PERIOD items
+            full_workout_list = []
+            for i, workout in enumerate(workouts):
+                full_workout_list.append(workout)
+                # Add rest period after each exercise
+                if i < len(rest_times):
+                    rest_period = Workout(
+                        name=REST_PERIOD,
+                        description="Take a break",
+                        equipment=[],
+                        intensity=Intensity.low,
+                        aerobic_type=AerobicType.recovery,
+                        target=[],
+                        time=rest_times[i],
+                    )
+                    full_workout_list.append(rest_period)
+
+            self.workout_list = full_workout_list
             # Update viewer if needed
             # Note: Viewer updates happen when stopwatch runs, so this mainly keeps data in sync
 
     def save_button_clicked(self):
         """Save workout session with snake_case filename."""
+        # Save workout name to settings before proceeding
+        self.form._save_workout_name_to_settings()
+
         workouts, rest_times = self.parameters_widget.get_workout_list()
 
         if not workouts:
@@ -390,6 +428,7 @@ class Robocross(GenericWidget):
 
             session_data = {
                 "workout_name": workout_name,
+                "workout_cycles": self.form.workout_cycles,  # NEW: Circuit cycles
                 "workouts": workouts_data,
                 "rest_time": avg_rest,
                 "rest_times": rest_times,  # Save individual rest times
@@ -412,6 +451,7 @@ class Robocross(GenericWidget):
             loaded_workouts = []
             loaded_rest_times = []
             default_rest_time = session_data.get("rest_time", 30)
+            loaded_cycles = session_data.get("workout_cycles", 1)  # NEW: Load circuit cycles
 
             # Parse workouts and extract rest times
             i = 0
@@ -439,7 +479,8 @@ class Robocross(GenericWidget):
                         workout_dict.get("aerobic_type")),
                     target=target_list,
                     time=workout_dict.get("time"),
-                    sub_workouts=workout_dict.get("sub_workouts")
+                    sub_workouts=workout_dict.get("sub_workouts"),
+                    energy=workout_dict.get("energy")  # Include calorie burn rate
                 )
                 loaded_workouts.append(workout)
 
@@ -459,21 +500,41 @@ class Robocross(GenericWidget):
             if rest_times:
                 loaded_rest_times = rest_times
 
+            # Load workout name FIRST
+            workout_name = session_data.get("workout_name", "")
+            if not workout_name:
+                workout_name = Path(file_path).stem
+
+            LOGGER.info(f"Loading workout: {workout_name}, cycles: {loaded_cycles}, workouts: {len(loaded_workouts)}")
+
+            # Set cycles on form and viewer BEFORE populating editor
+            self.form.workout_name_line_edit.setText(workout_name)
+            self.form.workout_cycles_spin_box.setValue(loaded_cycles)
+            self.viewer.workout_cycles = loaded_cycles  # Set BEFORE workout_list is updated
+
+            # Auto-calculate circuit length based on workout + rest durations
+            total_workout_time = sum(workout.time for workout in loaded_workouts)
+            total_rest_time = sum(loaded_rest_times)
+            total_circuit_time = total_workout_time + total_rest_time
+            estimated_circuit_minutes = int(round(total_circuit_time / 60))
+            self.form.length_spin_box.setValue(estimated_circuit_minutes)
+            LOGGER.info(f"Auto-calculated circuit length: {estimated_circuit_minutes} minutes (work: {total_workout_time}s, rest: {total_rest_time}s, total: {total_circuit_time}s)")
+
             # Clear and populate editor table
+            LOGGER.info(f"Clearing editor table and adding {len(loaded_workouts)} rows...")
             self.parameters_widget.editor_table.clear_rows()
             for i, workout in enumerate(loaded_workouts):
                 rest = loaded_rest_times[i] if i < len(loaded_rest_times) else default_rest_time
                 self.parameters_widget.editor_table.add_row(workout, rest)
 
-            self.workout_list = loaded_workouts
+            # Force layout update
+            self.parameters_widget.editor_table.widget.updateGeometry()
+            self.parameters_widget.editor_table.updateGeometry()
+            LOGGER.info(f"Successfully added {len(loaded_workouts)} rows to editor table")
+
+            # Note: workout_list is automatically updated via on_workout_list_changed signal
             self.rest_time = default_rest_time
 
-            # Load workout name
-            workout_name = session_data.get("workout_name", "")
-            if not workout_name:
-                workout_name = Path(file_path).stem
-
-            self.form.workout_name_line_edit.setText(workout_name)
             self.parameters_widget.editor_table.workout_name = workout_name
             self.parameters_widget.update_summary()
 
@@ -481,7 +542,20 @@ class Robocross(GenericWidget):
             self.viewer.stopwatch.play_pause_button.setEnabled(True)
             self.viewer.stopwatch.reset_button.setEnabled(True)
             self.viewer.scroll_widget.setVisible(True)
-            self.viewer.info = 'get ready...'
+
+            # Show first workout's description instead of just "get ready..."
+            if self.viewer.workout_list and len(self.viewer.workout_list) > 0:
+                first_workout = self.viewer.workout_list[0]
+                description = f"{first_workout.description}." if first_workout.description else "(no details)"
+                self.viewer.info = (
+                    f"<span style='font-weight: bold;'>Ready to start</span><br />"
+                    f"<span style='font-style:italic'>First exercise: {first_workout.name.replace('_', ' ').title()}</span><br />"
+                    f"<span style='font-style:italic'>Duration: {first_workout.time_nice}</span><br /><br />"
+                    f"{description.capitalize()}"
+                )
+            else:
+                self.viewer.info = 'get ready...'
+
             self.viewer.workout_name = parse_name_nicely(workout_name)
 
             LOGGER.info(f"Loaded: {workout_name} ({len(loaded_workouts)} items)")

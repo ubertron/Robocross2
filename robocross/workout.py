@@ -16,6 +16,7 @@ class Workout:
     target: list[Target]
     time: int
     sub_workouts: list[str] | None = None
+    energy: int | None = None  # Calories per minute
 
     def __repr__(self):
         return f'{self.name} - time: {self.time} seconds'

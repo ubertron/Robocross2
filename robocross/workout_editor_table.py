@@ -83,13 +83,24 @@ class WorkoutEditorTable(ScrollWidget):
         workout_data = WorkoutData()
         total_calories = 0
         for row in self.rows:
-            # Get energy from raw JSON data
-            exercise_name = row.workout.name
-            if exercise_name in workout_data.data:
-                energy = workout_data.data[exercise_name].get("energy", 0)
-                # energy is calories per minute, workout time is in seconds
-                calories = energy * (row.workout.time / 60.0)
-                total_calories += calories
+            energy = 0
+
+            # First try to use energy from the workout object itself
+            if row.workout.energy is not None:
+                energy = row.workout.energy
+            else:
+                # Fallback: get energy from workout database
+                exercise_name = row.workout.name
+                if exercise_name in workout_data.data:
+                    energy = workout_data.data[exercise_name].get("energy", 0)
+                else:
+                    # Last resort: estimate based on intensity
+                    intensity_energy = {"high": 13, "medium": 9, "low": 6}
+                    energy = intensity_energy.get(row.workout.intensity.name, 9)
+
+            # energy is calories per minute, workout time is in seconds
+            calories = energy * (row.workout.time / 60.0)
+            total_calories += calories
 
         return {
             'workout_name': self.workout_name,
@@ -132,6 +143,9 @@ class WorkoutEditorTable(ScrollWidget):
             # Insert at specific index
             self.rows.insert(index, row)
             self.widget.layout().insertWidget(index + 2, row)  # +2 for summary and header
+
+        # Explicitly show the row
+        row.show()
 
         self.on_data_changed()
 

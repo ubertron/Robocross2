@@ -2,7 +2,7 @@ import logging
 
 from functools import partial
 
-from PySide6.QtWidgets import QCheckBox, QWidget, QLabel, QSizePolicy, QFrame
+from PySide6.QtWidgets import QCheckBox, QWidget, QLabel, QSizePolicy, QFrame, QGroupBox, QGridLayout, QVBoxLayout
 from PySide6.QtCore import Signal, Qt, QSettings
 
 from core import DEVELOPER
@@ -43,23 +43,39 @@ class ParametersWidget(GenericWidget):
         self.button_bar.add_icon_button(icon_path=image_path("add.png"), tool_tip="Manually add exercise to workout",
                                         clicked=self.add_exercise_clicked.emit)
         self.button_bar.add_stretch()
+
+        # Main content pane with left and right columns
         content_pane = self.add_widget(GenericWidget(alignment=Alignment.horizontal))
-        self.form: WorkoutForm = content_pane.add_widget(WorkoutForm(parent_widget=self))
-        equipment_widget = content_pane.add_widget(GenericWidget())
-        equipment_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        equipment_widget.add_label("Equipment List")
-        self.equipment_check_boxes = [equipment_widget.add_widget(QCheckBox(x)) for x in self.equipment_names]
 
-        # Summary section (outside scroll area)
-        self.summary_frame = self.add_widget(QFrame())
-        self.summary_frame.setFrameShape(QFrame.Shape.Box)
-        self.summary_frame.setStyleSheet("QFrame { border: 2px solid #555; padding: 5px; margin: 2px; }")
+        # Left column: Form only
+        left_column = content_pane.add_widget(GenericWidget())
+        self.form: WorkoutForm = left_column.add_widget(WorkoutForm(parent_widget=self))
 
-        from PySide6.QtWidgets import QVBoxLayout
+        # Right column: Equipment + Summary
+        right_column = content_pane.add_widget(GenericWidget())
+        right_column.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+
+        # Equipment group box with 2 columns (moved from left column)
+        equipment_group_right = QGroupBox("Equipment List")
+        equipment_layout_right = QGridLayout()
+        self.equipment_check_boxes = []
+        equipment_names = self.equipment_names
+        for index, name in enumerate(equipment_names):
+            checkbox = QCheckBox(name)
+            row = index // 2
+            col = index % 2
+            equipment_layout_right.addWidget(checkbox, row, col)
+            self.equipment_check_boxes.append(checkbox)
+        equipment_group_right.setLayout(equipment_layout_right)
+        right_column.add_widget(equipment_group_right)
+
+        # Summary group box
+        self.summary_frame = QGroupBox("Workout Summary")
         summary_layout = QVBoxLayout()
         summary_layout.setSpacing(2)
         summary_layout.setContentsMargins(5, 5, 5, 5)
         self.summary_frame.setLayout(summary_layout)
+        right_column.add_widget(self.summary_frame)
 
         # Workout name title (compact, no borders)
         self.summary_title = QLabel("")
@@ -79,15 +95,19 @@ class ParametersWidget(GenericWidget):
         workout_data = WorkoutData()
         available_exercises = [w.name for w in workout_data.workouts]
 
-        # Organize exercises by category
-        exercises_by_category = {'cardio': [], 'strength': []}
+        # Organize exercises by category (dynamically from workout_data categories)
+        exercises_by_category = {}
+        for category in workout_data.categories:
+            exercises_by_category[category] = []
+
         for workout in workout_data.workouts:
-            if workout.aerobic_type.name == 'cardio':
-                exercises_by_category['cardio'].append(workout.name)
-            elif workout.aerobic_type.name == 'strength':
-                exercises_by_category['strength'].append(workout.name)
+            category = workout.aerobic_type.name
+            if category in exercises_by_category:
+                exercises_by_category[category].append(workout.name)
 
         self.editor_table = self.add_widget(WorkoutEditorTable(available_exercises, exercises_by_category))
+        self.editor_table.setMinimumHeight(300)  # Ensure table is visible
+        self.editor_table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         # Connect table changes to update summary
         self.editor_table.workout_list_changed.connect(self.update_summary)
@@ -175,12 +195,32 @@ class ParametersWidget(GenericWidget):
             self.summary_stats.setText("No exercises added yet")
         else:
             from core import time_utils
-            total_time = summary_data['total_time'] + summary_data['total_rest']
-            stats_text = (
-                f"Workout time: {time_utils.time_nice(summary_data['total_time'])}\n"
-                f"Rest time: {time_utils.time_nice(summary_data['total_rest'])}\n"
-                f"Total time: {time_utils.time_nice(total_time)}\n"
-                f"Exercises: {summary_data['num_exercises']}\n"
-                f"Total calories: {int(summary_data['total_calories'])}"
-            )
+
+            # Get workout cycles from form
+            workout_cycles = self.form.workout_cycles
+
+            # Calculate circuit time and total time with cycles
+            circuit_time = summary_data['total_time'] + summary_data['total_rest']
+            total_time_with_cycles = circuit_time * workout_cycles
+            total_calories_with_cycles = int(summary_data['total_calories'] * workout_cycles)
+
+            # Build stats text
+            if workout_cycles > 1:
+                stats_text = (
+                    f"Workout time: {time_utils.time_nice(summary_data['total_time'])}\n"
+                    f"Rest time: {time_utils.time_nice(summary_data['total_rest'])}\n"
+                    f"Circuit time: {time_utils.time_nice(circuit_time)}\n"
+                    f"Circuit Count: {workout_cycles}\n"
+                    f"Total time: {time_utils.time_nice(total_time_with_cycles)}\n"
+                    f"Exercises: {summary_data['num_exercises']}\n"
+                    f"Total calories: {total_calories_with_cycles}"
+                )
+            else:
+                stats_text = (
+                    f"Workout time: {time_utils.time_nice(summary_data['total_time'])}\n"
+                    f"Rest time: {time_utils.time_nice(summary_data['total_rest'])}\n"
+                    f"Total time: {time_utils.time_nice(circuit_time)}\n"
+                    f"Exercises: {summary_data['num_exercises']}\n"
+                    f"Total calories: {int(summary_data['total_calories'])}"
+                )
             self.summary_stats.setText(stats_text)

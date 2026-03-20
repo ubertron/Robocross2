@@ -18,24 +18,21 @@ LOGGER = get_logger(__name__, level=logging.DEBUG)
 class WorkoutChip(GridWidget):
     """Widget to represent a workout."""
 
-    background_not_started = 'background-color: rgb(128, 128, 128)'
-    background_in_progress = 'background-color: rgb(255, 255, 255)'
-    background_finished = 'background-color: rgb(216, 216, 216)'
-    progress_bar_style = 'background-color: rgb(0, 255, 0)'
-    padding = 4
-    text_style = 'color: rgb(16, 16, 16)'
-    default_font = QFont(SANS_SERIF_FONT, 16)
+    progress_bar_style = 'background-color: rgba(0, 0, 0, 0.3)'  # Semi-transparent overlay
+    padding = 5  # Match editor button padding
+    fixed_height = 30  # Match editor button height
     time_reached: Signal = Signal()
 
     def __init__(self, workout: Workout, period: int = 100, show_progress: bool = True):
         super(WorkoutChip, self).__init__(workout.name, margin=1)
         self.period = period
         self.background = self.add_label('', row=0, column=0)
-        self.background.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Preferred)
+        self.background.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Fixed)
+        self.background.setFixedHeight(self.fixed_height)
         self.progress_label: QLabel = self.add_label('', row=0, column=0)
-        self.label = self.add_label(text="", row=0, column=0, alignment=Qt.AlignmentFlag.AlignLeft)
-        self.label.setFont(self.default_font)
-        self.label.setContentsMargins(self.padding * 3, self.padding, self.padding * 3, self.padding)
+        self.label = self.add_label(text="", row=0, column=0, alignment=Qt.AlignmentFlag.AlignCenter)
+        self.label.setContentsMargins(self.padding, self.padding, self.padding, self.padding)
+        self.setFixedHeight(self.fixed_height)
         self.timer: QTimer = QTimer()
         self.workout = workout
         self.time: float = 0.0
@@ -43,11 +40,44 @@ class WorkoutChip(GridWidget):
         self.running: bool = False
         self.show_progress: bool = show_progress
         self.progress_visible = show_progress
+        self._category_colors = self._get_category_colors()
         self.setup_ui()
+
+    def _get_category_colors(self) -> dict:
+        """Get colors for different states based on workout category."""
+        from robocross import get_category_color, get_contrast_text_color
+
+        base_color = get_category_color(self.workout.aerobic_type.name)
+        text_color = get_contrast_text_color(base_color)
+
+        # Darken color for not-started state (60% brightness)
+        not_started_color = self._adjust_brightness(base_color, 0.6)
+        # Lighten color for finished state (130% brightness)
+        finished_color = self._adjust_brightness(base_color, 1.3)
+
+        return {
+            'not_started_bg': not_started_color,
+            'in_progress_bg': base_color,
+            'finished_bg': finished_color,
+            'text': text_color
+        }
+
+    def _adjust_brightness(self, hex_color: str, factor: float) -> str:
+        """Adjust brightness of hex color by factor (0.0 to 2.0)."""
+        hex_color = hex_color.lstrip('#')
+        r = int(hex_color[0:2], 16)
+        g = int(hex_color[2:4], 16)
+        b = int(hex_color[4:6], 16)
+
+        # Apply factor and clamp to 0-255
+        r = min(255, int(r * factor))
+        g = min(255, int(g * factor))
+        b = min(255, int(b * factor))
+
+        return f'#{r:02x}{g:02x}{b:02x}'
 
     def setup_ui(self):
         """Setup ui."""
-        self.label.setStyleSheet(self.text_style)
         self.progress_label.setAlignment(Qt.AlignLeft)
         self.progress_label.setStyleSheet(self.progress_bar_style)
         self.timer.timeout.connect(self.update_progress)
@@ -59,7 +89,10 @@ class WorkoutChip(GridWidget):
         return f"Workout: {self.workout.name.title()}"
 
     def reset(self):
-        self.background.setStyleSheet(self.background_not_started)
+        bg_color = self._category_colors['not_started_bg']
+        text_color = self._category_colors['text']
+        self.background.setStyleSheet(f'background-color: {bg_color}; border: 1px solid #555;')
+        self.label.setStyleSheet(f'color: {text_color}; font-weight: normal;')
         self.time = 0.0
         self.progress = 0.0
         self.progress_visible = self.show_progress
@@ -68,7 +101,10 @@ class WorkoutChip(GridWidget):
     def start(self):
         self.timer.start()
         self.running = True
-        self.background.setStyleSheet(self.background_in_progress)
+        bg_color = self._category_colors['in_progress_bg']
+        text_color = self._category_colors['text']
+        self.background.setStyleSheet(f'background-color: {bg_color}; border: 1px solid #555;')
+        self.label.setStyleSheet(f'color: {text_color}; font-weight: normal;')
 
     def pause(self):
         self.timer.stop()
@@ -79,7 +115,10 @@ class WorkoutChip(GridWidget):
         if self.progress == 1.0:
             self.timer.stop()
             self.progress_visible = False
-            self.background.setStyleSheet(self.background_finished)
+            bg_color = self._category_colors['finished_bg']
+            text_color = self._category_colors['text']
+            self.background.setStyleSheet(f'background-color: {bg_color}; border: 1px solid #555;')
+            self.label.setStyleSheet(f'color: {text_color}; font-weight: normal;')
             self.time_reached.emit()
         else:
             new_width  = int(self.size().width() * self.progress)
@@ -101,8 +140,13 @@ class WorkoutChip(GridWidget):
     def workout(self, workout: Workout):
         self._workout = workout
         self.setWindowTitle(workout.name)
-        self.label.setText(workout.name.title())
+        # Format name: replace underscores with spaces and title case
+        formatted_name = workout.name.replace('_', ' ').title()
+        self.label.setText(formatted_name)
         self.label.setToolTip(workout.description)
+        # Regenerate colors for new workout category
+        if hasattr(self, '_category_colors'):
+            self._category_colors = self._get_category_colors()
 
     def update_display_name(self, display_name: str):
         """Update the displayed name while keeping the same workout for progress tracking.
@@ -110,7 +154,9 @@ class WorkoutChip(GridWidget):
         This is used for sub-workouts where the display changes but the progress
         calculation stays based on the full workout duration.
         """
-        self.label.setText(display_name.title())
+        # Format name: replace underscores with spaces and title case
+        formatted_name = display_name.replace('_', ' ').title()
+        self.label.setText(formatted_name)
 
 
 if __name__ == "__main__":

@@ -13,19 +13,28 @@ LOGGER = get_logger(name=__name__, level=logging.DEBUG)
 
 class Routine:
     def __init__(self, interval: int = 120, workout_length: int = 35, rest_time: int = 30, nope_list: list = (),
-                 equipment_filter: list[Equipment] = ()):
+                 equipment_filter: list[Equipment] = (), selected_categories: list[str] = None,
+                 workout_structure: str = "Random"):
         """
         Workout Routine
         :param interval: seconds
         :param workout_length: minutes
         :param rest_time: seconds
+        :param selected_categories: list of category names (e.g., ['cardio', 'strength', 'combat', 'flexibility'])
+        :param workout_structure: 'Random' or 'Sequence'
         """
         self.interval = interval
         self.workout_length = workout_length
         self.minimum_rest_time = rest_time
         self.nope_list = nope_list
         self.equipment_filter = equipment_filter
-        self.workout_data: WorkoutData = WorkoutData(nope_list=self.nope_list, equipment_filter=self.equipment_filter)
+        self.selected_categories = selected_categories if selected_categories else ['cardio', 'strength']
+        self.workout_structure = workout_structure
+        self.workout_data: WorkoutData = WorkoutData(
+            nope_list=self.nope_list,
+            equipment_filter=self.equipment_filter,
+            selected_categories=self.selected_categories
+        )
 
     def __repr__(self) -> str:
         return f"Routine | interval: {self.interval}, workout_length: {self.workout_length}, rest_time: {self.rest_time}"
@@ -68,9 +77,36 @@ class Routine:
 
     @property
     def random_workout(self) -> list[Workout]:
+        """Build workout picking randomly from selected categories."""
         if self.workout_data.workouts:
             return self.build_routine([random.choice(self.workout_data.workouts) for _ in range(self.workout_count)])
         return []
+
+    @property
+    def sequence_workout(self) -> list[Workout]:
+        """Build workout cycling through selected categories in a random sequence."""
+        if not self.selected_categories:
+            return []
+
+        # Generate random sequence of category initials (e.g., CSF for Combat, Strength, Flexibility)
+        category_sequence = self.selected_categories.copy()
+        random.shuffle(category_sequence)
+
+        LOGGER.info(f"Sequence order: {' → '.join([cat.title() for cat in category_sequence])}")
+
+        workout_items = []
+        for i in range(self.workout_count):
+            # Cycle through the category sequence
+            category = category_sequence[i % len(category_sequence)]
+            category_workouts = self.workout_data.get_workouts_by_category(category)
+
+            if not category_workouts:
+                LOGGER.warning(f"No workouts available for category: {category}")
+                continue
+
+            workout_items.append(random.choice(category_workouts))
+
+        return self.build_routine(workout_items) if workout_items else []
 
     @property
     def test_workout(self) -> list[Workout]:
@@ -104,16 +140,27 @@ class Routine:
             return workout_list
         return []
 
-    def get_workout_list(self, workout_type: WorkoutType) -> list[Workout]:
-        """Get workout list by workout type."""
-        workout_list = {
-            WorkoutType.cardio: self.cardio_workout,
-            WorkoutType.strength: self.strength_workout,
-            WorkoutType.cardio_strength: self.cardio_strength_mix,
-            WorkoutType.random: self.random_workout,
-            WorkoutType.test: self.test_workout,
-        }[workout_type] if workout_type else []
-        return workout_list
+    def get_workout_list(self, workout_type: WorkoutType = None) -> list[Workout]:
+        """Get workout list by workout structure (Random or Sequence)."""
+        if workout_type:
+            # Legacy support for old workout_type parameter
+            workout_list = {
+                WorkoutType.cardio: self.cardio_workout,
+                WorkoutType.strength: self.strength_workout,
+                WorkoutType.cardio_strength: self.cardio_strength_mix,
+                WorkoutType.random: self.random_workout,
+                WorkoutType.test: self.test_workout,
+            }[workout_type]
+            return workout_list
+
+        # New workflow_structure based routing
+        if self.workout_structure == "Random":
+            return self.random_workout
+        elif self.workout_structure == "Sequence":
+            return self.sequence_workout
+        else:
+            LOGGER.warning(f"Unknown workout structure: {self.workout_structure}")
+            return []
 
 
 if __name__ == "__main__":

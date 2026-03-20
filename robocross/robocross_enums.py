@@ -7,6 +7,8 @@ from enum import auto, Enum, unique
 class AerobicType(Enum):
     cardio = auto()
     strength = auto()
+    combat = auto()
+    flexibility = auto()
     recovery = auto()
 
 
@@ -41,10 +43,10 @@ class RunMode(Enum):
 
 @unique
 class Target(Enum):
-    abdominals = auto()
     arms = auto()
     back = auto()
     chest = auto()
+    core = auto()
     full_body = auto()
     legs = auto()
     lower_body = auto()
