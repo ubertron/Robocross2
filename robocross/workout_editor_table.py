@@ -1,6 +1,6 @@
 """Scrollable editable table of workout items."""
 
-from PySide6.QtWidgets import QLabel, QSizePolicy, QFrame
+from PySide6.QtWidgets import QLabel, QSizePolicy, QFrame, QMenu
 from PySide6.QtCore import Signal, Qt
 
 from core.core_enums import Alignment
@@ -16,6 +16,7 @@ class WorkoutEditorTable(ScrollWidget):
 
     # Signals
     workout_list_changed = Signal()  # emitted when workout list is modified
+    add_exercise_requested = Signal()  # emitted when user requests to add exercise via context menu
 
     def __init__(self, available_exercises: list[str], exercises_by_category: dict = None, parent=None):
         super().__init__(alignment=Alignment.vertical, parent=parent)
@@ -24,6 +25,8 @@ class WorkoutEditorTable(ScrollWidget):
         self.rows: list[WorkoutEditorRow] = []
         self.default_rest_time = 30
         self.workout_name = ""
+        self.copied_duration = None  # Stored duration value for copy/paste
+        self.copied_rest_time = None  # Stored rest time value for copy/paste
         self.setup_ui()
 
     def setup_ui(self):
@@ -43,18 +46,21 @@ class WorkoutEditorTable(ScrollWidget):
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
         )
         exercise_label.setStyleSheet("font-weight: bold;")
+        exercise_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         duration_label = header.add_widget(QLabel("Duration"))
         duration_label.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
         )
         duration_label.setStyleSheet("font-weight: bold;")
+        duration_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         rest_label = header.add_widget(QLabel("Rest Time"))
         rest_label.setSizePolicy(
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
         )
         rest_label.setStyleSheet("font-weight: bold;")
+        rest_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         delete_label = header.add_widget(QLabel(""))
         delete_label.setMaximumWidth(40)
@@ -70,13 +76,24 @@ class WorkoutEditorTable(ScrollWidget):
                 'total_time': 0,
                 'total_rest': 0,
                 'num_exercises': 0,
-                'total_calories': 0
+                'total_calories': 0,
+                'equipment': []
             }
 
         # Calculate stats
         total_time = sum(row.workout.time for row in self.rows)
         total_rest = sum(row.rest_seconds for row in self.rows)
         num_exercises = len(self.rows)
+
+        # Collect unique equipment from all workouts
+        equipment_set = set()
+        for row in self.rows:
+            if row.workout.equipment:
+                for equip in row.workout.equipment:
+                    equipment_set.add(equip)
+
+        # Convert to sorted list of equipment names
+        equipment_list = sorted([eq.name.replace('_', ' ').title() for eq in equipment_set])
 
         # Calculate total calories
         from robocross.workout_data import WorkoutData
@@ -107,7 +124,8 @@ class WorkoutEditorTable(ScrollWidget):
             'total_time': total_time,
             'total_rest': total_rest,
             'num_exercises': num_exercises,
-            'total_calories': total_calories
+            'total_calories': total_calories,
+            'equipment': equipment_list
         }
 
     def add_row(self, workout: Workout, rest_seconds: int = None,
@@ -129,7 +147,17 @@ class WorkoutEditorTable(ScrollWidget):
         row.delete_requested.connect(self.on_row_delete)
         row.insert_above_requested.connect(self.on_insert_above)
         row.insert_below_requested.connect(self.on_insert_below)
+        row.move_up_requested.connect(self.on_move_up)
+        row.move_down_requested.connect(self.on_move_down)
         row.data_changed.connect(self.on_data_changed)
+
+        # Connect time copy/paste/apply signals
+        row.copy_duration_requested.connect(self.on_copy_duration)
+        row.paste_duration_requested.connect(self.on_paste_duration)
+        row.apply_duration_to_all_requested.connect(self.on_apply_duration_to_all)
+        row.copy_rest_requested.connect(self.on_copy_rest)
+        row.paste_rest_requested.connect(self.on_paste_rest)
+        row.apply_rest_to_all_requested.connect(self.on_apply_rest_to_all)
 
         # Insert at correct position
         if index == -1 or index >= len(self.rows):
@@ -142,7 +170,7 @@ class WorkoutEditorTable(ScrollWidget):
         else:
             # Insert at specific index
             self.rows.insert(index, row)
-            self.widget.layout().insertWidget(index + 2, row)  # +2 for summary and header
+            self.widget.layout().insertWidget(index + 1, row)  # +1 for header row
 
         # Explicitly show the row
         row.show()
@@ -226,6 +254,76 @@ class WorkoutEditorTable(ScrollWidget):
         default_workout = self._create_default_workout()
         self.add_row(default_workout, self.default_rest_time, index + 1)
 
+    def on_move_up(self, row: WorkoutEditorRow):
+        """Move row up one position in the list."""
+        if row not in self.rows:
+            return
+
+        index = self.rows.index(row)
+        if index == 0:
+            return  # Already at top
+
+        # Swap with previous row in list
+        self.rows[index], self.rows[index - 1] = self.rows[index - 1], self.rows[index]
+
+        # Update layout positions: row is now at index - 1, layout position is (index - 1) + 1 = index
+        layout = self.widget.layout()
+        layout.removeWidget(row)
+        layout.insertWidget(index, row)  # + 1 for header offset
+
+        self.on_data_changed()
+
+    def on_move_down(self, row: WorkoutEditorRow):
+        """Move row down one position in the list."""
+        if row not in self.rows:
+            return
+
+        index = self.rows.index(row)
+        if index >= len(self.rows) - 1:
+            return  # Already at bottom
+
+        # Swap with next row in list
+        self.rows[index], self.rows[index + 1] = self.rows[index + 1], self.rows[index]
+
+        # Update layout positions: row is now at index + 1, layout position is (index + 1) + 1 = index + 2
+        layout = self.widget.layout()
+        layout.removeWidget(row)
+        layout.insertWidget(index + 2, row)  # + 1 for header, + 1 for new position
+
+        self.on_data_changed()
+
+    def reorder_row(self, dragged_row: WorkoutEditorRow, target_index: int):
+        """
+        Reorder rows via drag and drop.
+
+        Args:
+            dragged_row: The row being dragged
+            target_index: The index where it should be dropped
+        """
+        if dragged_row not in self.rows:
+            return
+
+        current_index = self.rows.index(dragged_row)
+        if current_index == target_index:
+            return  # No change
+
+        # Remove from current position
+        self.rows.pop(current_index)
+
+        # Adjust target index if dragging down
+        if current_index < target_index:
+            target_index -= 1
+
+        # Insert at new position
+        self.rows.insert(target_index, dragged_row)
+
+        # Update layout
+        layout = self.widget.layout()
+        layout.removeWidget(dragged_row)
+        layout.insertWidget(target_index + 1, dragged_row)  # + 1 for header
+
+        self.on_data_changed()
+
     def _create_default_workout(self) -> Workout:
         """
         Create default workout for new rows.
@@ -248,3 +346,74 @@ class WorkoutEditorTable(ScrollWidget):
             time=45,
             sub_workouts=None
         )
+
+    def contextMenuEvent(self, event):
+        """Show context menu when right-clicking in empty space."""
+        # Check if the click is on the widget (empty space) and not on a row
+        # Get the widget under the cursor
+        widget_at_pos = self.widget.childAt(event.pos())
+
+        # If widget_at_pos is None or the widget itself (not a row), show add menu
+        if widget_at_pos is None or widget_at_pos == self.widget:
+            menu = QMenu(self)
+            add_action = menu.addAction("Add Exercise")
+
+            action = menu.exec(event.globalPos())
+
+            if action == add_action:
+                self.add_exercise_requested.emit()
+        else:
+            # Let the event propagate to rows
+            super().contextMenuEvent(event)
+
+    def on_copy_duration(self, row: WorkoutEditorRow):
+        """Copy duration value from row."""
+        self.copied_duration = row.workout.time
+        from core import LOGGER
+        LOGGER.info(f"Copied duration: {self.copied_duration} seconds")
+
+    def on_paste_duration(self, row: WorkoutEditorRow):
+        """Paste duration value to row."""
+        if self.copied_duration is not None:
+            row.workout.time = self.copied_duration
+            row.update_duration_button_text()
+            row.data_changed.emit()
+            from core import LOGGER
+            LOGGER.info(f"Pasted duration: {self.copied_duration} seconds")
+
+    def on_apply_duration_to_all(self, row: WorkoutEditorRow):
+        """Apply duration from current row to all other rows."""
+        duration = row.workout.time
+        for other_row in self.rows:
+            if other_row != row:
+                other_row.workout.time = duration
+                other_row.update_duration_button_text()
+        self.on_data_changed()
+        from core import LOGGER
+        LOGGER.info(f"Applied duration {duration} seconds to all rows")
+
+    def on_copy_rest(self, row: WorkoutEditorRow):
+        """Copy rest time value from row."""
+        self.copied_rest_time = row.rest_seconds
+        from core import LOGGER
+        LOGGER.info(f"Copied rest time: {self.copied_rest_time} seconds")
+
+    def on_paste_rest(self, row: WorkoutEditorRow):
+        """Paste rest time value to row."""
+        if self.copied_rest_time is not None:
+            row.rest_seconds = self.copied_rest_time
+            row.update_rest_button_text()
+            row.data_changed.emit()
+            from core import LOGGER
+            LOGGER.info(f"Pasted rest time: {self.copied_rest_time} seconds")
+
+    def on_apply_rest_to_all(self, row: WorkoutEditorRow):
+        """Apply rest time from current row to all other rows."""
+        rest_time = row.rest_seconds
+        for other_row in self.rows:
+            if other_row != row:
+                other_row.rest_seconds = rest_time
+                other_row.update_rest_button_text()
+        self.on_data_changed()
+        from core import LOGGER
+        LOGGER.info(f"Applied rest time {rest_time} seconds to all rows")

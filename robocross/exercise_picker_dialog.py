@@ -1,7 +1,9 @@
 """Dialog for picking exercises from a hierarchical tree view."""
 
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QPushButton, QHBoxLayout
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSettings
+
+from core import DEVELOPER
 
 
 class ExercisePickerDialog(QDialog):
@@ -19,6 +21,8 @@ class ExercisePickerDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Select Exercise")
         self.selected_exercise = current_exercise
+        self.settings = QSettings(DEVELOPER, "ExercisePickerDialog")
+        self.category_items = {}  # Store category items for state persistence
         self.setup_ui(exercises_by_category, current_exercise)
 
     def setup_ui(self, exercises_by_category: dict, current_exercise: str):
@@ -37,7 +41,13 @@ class ExercisePickerDialog(QDialog):
             category_item = QTreeWidgetItem(self.tree)
             category_item.setText(0, category_name.title())
             category_item.setFlags(category_item.flags() & ~Qt.ItemFlag.ItemIsSelectable)  # Make non-selectable
-            category_item.setExpanded(True)
+
+            # Restore expanded state from settings (default to True)
+            expanded_state = self.settings.value(f"category_expanded/{category_name}", True, type=bool)
+            category_item.setExpanded(expanded_state)
+
+            # Store reference for later
+            self.category_items[category_name] = category_item
 
             # Add exercises under category (sorted alphabetically)
             for exercise_name in sorted(exercises):
@@ -74,12 +84,24 @@ class ExercisePickerDialog(QDialog):
             self.accept()
 
     def accept(self):
-        """Store selected exercise before accepting."""
+        """Store selected exercise and save tree state before accepting."""
+        # Save tree expansion state
+        for category_name, category_item in self.category_items.items():
+            self.settings.setValue(f"category_expanded/{category_name}", category_item.isExpanded())
+
+        # Store selected exercise
         current_item = self.tree.currentItem()
         if current_item and current_item.parent() is not None:
             # It's an exercise (has a parent category)
             self.selected_exercise = current_item.data(0, Qt.ItemDataRole.UserRole)
         super().accept()
+
+    def reject(self):
+        """Save tree state before rejecting."""
+        # Save tree expansion state
+        for category_name, category_item in self.category_items.items():
+            self.settings.setValue(f"category_expanded/{category_name}", category_item.isExpanded())
+        super().reject()
 
     @staticmethod
     def get_exercise(exercises_by_category: dict, current_exercise: str = None, parent=None):

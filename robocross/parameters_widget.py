@@ -25,6 +25,7 @@ class ParametersWidget(GenericWidget):
     save_button_clicked = Signal()
     build_button_clicked = Signal()
     add_exercise_clicked = Signal()
+    copy_to_clipboard_clicked = Signal()
     workout_name_changed = Signal(str)  # Emits the workout name
     title = "Robocross Parameters Widget"
 
@@ -42,6 +43,8 @@ class ParametersWidget(GenericWidget):
                                         clicked=self.build_button_clicked.emit)
         self.button_bar.add_icon_button(icon_path=image_path("add.png"), tool_tip="Manually add exercise to workout",
                                         clicked=self.add_exercise_clicked.emit)
+        self.button_bar.add_icon_button(icon_path=image_path("save.png"), tool_tip="Copy workout data to clipboard for spreadsheet",
+                                        clicked=self.copy_to_clipboard_clicked.emit)
         self.button_bar.add_stretch()
 
         # Main content pane with left and right columns
@@ -90,6 +93,14 @@ class ParametersWidget(GenericWidget):
         self.summary_stats.setStyleSheet("font-size: 12px; border: none; background: transparent;")
         self.summary_stats.setFrameShape(QFrame.Shape.NoFrame)
         summary_layout.addWidget(self.summary_stats)
+
+        # Gear list label (compact, no borders)
+        self.summary_gear = QLabel("")
+        self.summary_gear.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.summary_gear.setStyleSheet("font-size: 12px; border: none; background: transparent;")
+        self.summary_gear.setFrameShape(QFrame.Shape.NoFrame)
+        self.summary_gear.setWordWrap(True)
+        summary_layout.addWidget(self.summary_gear)
 
         # Editor table (in scroll area)
         workout_data = WorkoutData()
@@ -193,6 +204,7 @@ class ParametersWidget(GenericWidget):
 
         if summary_data['num_exercises'] == 0:
             self.summary_stats.setText("No exercises added yet")
+            self.summary_gear.setText("")
         else:
             from core import time_utils
 
@@ -224,3 +236,10 @@ class ParametersWidget(GenericWidget):
                     f"Total calories: {int(summary_data['total_calories'])}"
                 )
             self.summary_stats.setText(stats_text)
+
+            # Build gear list text
+            if summary_data['equipment']:
+                gear_text = "Gear list: " + ", ".join(summary_data['equipment'])
+            else:
+                gear_text = "Gear list: No equipment needed"
+            self.summary_gear.setText(gear_text)

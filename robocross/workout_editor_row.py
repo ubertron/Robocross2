@@ -1,7 +1,8 @@
 """Single editable row in the workout editor table."""
 
 from PySide6.QtWidgets import QComboBox, QPushButton, QMenu, QSizePolicy
-from PySide6.QtCore import Signal, Qt
+from PySide6.QtCore import Signal, Qt, QMimeData
+from PySide6.QtGui import QDrag
 
 from core.core_enums import Alignment
 from robocross.workout import Workout
@@ -15,7 +16,17 @@ class WorkoutEditorRow(GenericWidget):
     delete_requested = Signal(object)  # emits self when delete clicked
     insert_above_requested = Signal(object)  # emits self when insert above requested
     insert_below_requested = Signal(object)  # emits self when insert below requested
+    move_up_requested = Signal(object)  # emits self when move up requested
+    move_down_requested = Signal(object)  # emits self when move down requested
     data_changed = Signal()  # emitted when any field changes
+
+    # Time copy/paste/apply signals
+    copy_duration_requested = Signal(object)  # emits self when duration copy requested
+    paste_duration_requested = Signal(object)  # emits self when duration paste requested
+    apply_duration_to_all_requested = Signal(object)  # emits self when apply duration to all requested
+    copy_rest_requested = Signal(object)  # emits self when rest time copy requested
+    paste_rest_requested = Signal(object)  # emits self when rest time paste requested
+    apply_rest_to_all_requested = Signal(object)  # emits self when apply rest time to all requested
 
     def __init__(self, workout: Workout, available_exercises: list[str],
                  rest_seconds: int = 30, exercises_by_category: dict = None, parent=None):
@@ -24,6 +35,8 @@ class WorkoutEditorRow(GenericWidget):
         self.available_exercises = available_exercises
         self.exercises_by_category = exercises_by_category or {'cardio': [], 'strength': []}
         self.rest_seconds = rest_seconds
+        self.drag_start_position = None
+        self.setAcceptDrops(True)
         self.setup_ui()
 
     def setup_ui(self):
@@ -54,6 +67,8 @@ class WorkoutEditorRow(GenericWidget):
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
         )
         self.duration_button.setFixedHeight(widget_height)
+        self.duration_button.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.duration_button.customContextMenuRequested.connect(self.show_duration_context_menu)
 
         # Rest button (25% width)
         self.rest_button = self.add_widget(QPushButton())
@@ -63,6 +78,8 @@ class WorkoutEditorRow(GenericWidget):
             QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
         )
         self.rest_button.setFixedHeight(widget_height)
+        self.rest_button.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.rest_button.customContextMenuRequested.connect(self.show_rest_context_menu)
 
         # Delete button (10% width)
         self.delete_button = self.add_widget(QPushButton("X"))
@@ -78,6 +95,7 @@ class WorkoutEditorRow(GenericWidget):
         nice_name = self.workout.name.replace('_', ' ').title()
         self.exercise_button.setText(nice_name)
         self.update_exercise_button_color()
+        self.update_exercise_button_tooltip()
 
     def update_exercise_button_color(self):
         """Update exercise button background color based on category."""
@@ -99,6 +117,13 @@ class WorkoutEditorRow(GenericWidget):
                 border: 2px solid #000;
             }}
         """)
+
+    def update_exercise_button_tooltip(self):
+        """Update exercise button tooltip with workout description."""
+        description = self.workout.description or "No description available"
+        # Capitalize first letter and format nicely
+        tooltip_text = description.capitalize()
+        self.exercise_button.setToolTip(tooltip_text)
 
     def update_duration_button_text(self):
         """Update duration button text to show human-readable time."""
@@ -158,17 +183,101 @@ class WorkoutEditorRow(GenericWidget):
                 self.update_exercise_button_text()
                 self.data_changed.emit()
 
-    def contextMenuEvent(self, event):
-        """Show right-click context menu with Insert Above/Below/Delete options."""
+    def show_duration_context_menu(self, pos):
+        """Show context menu for duration button."""
         menu = QMenu(self)
+
+        # Copy value action
+        copy_action = menu.addAction("Copy Value")
+
+        # Paste value action (only if there's a copied value)
+        paste_action = None
+        parent_table = self.parent()
+        if hasattr(parent_table, 'copied_duration') and parent_table.copied_duration is not None:
+            paste_action = menu.addAction("Paste Value")
+
+        # Apply to all action
+        apply_to_all_action = menu.addAction("Apply to All Durations")
+
+        # Show menu and handle action
+        action = menu.exec(self.duration_button.mapToGlobal(pos))
+
+        if action == copy_action:
+            self.copy_duration_requested.emit(self)
+        elif paste_action and action == paste_action:
+            self.paste_duration_requested.emit(self)
+        elif action == apply_to_all_action:
+            self.apply_duration_to_all_requested.emit(self)
+
+    def show_rest_context_menu(self, pos):
+        """Show context menu for rest time button."""
+        menu = QMenu(self)
+
+        # Copy value action
+        copy_action = menu.addAction("Copy Value")
+
+        # Paste value action (only if there's a copied value)
+        paste_action = None
+        parent_table = self.parent()
+        if hasattr(parent_table, 'copied_rest_time') and parent_table.copied_rest_time is not None:
+            paste_action = menu.addAction("Paste Value")
+
+        # Apply to all action
+        apply_to_all_action = menu.addAction("Apply to All Rest Times")
+
+        # Show menu and handle action
+        action = menu.exec(self.rest_button.mapToGlobal(pos))
+
+        if action == copy_action:
+            self.copy_rest_requested.emit(self)
+        elif paste_action and action == paste_action:
+            self.paste_rest_requested.emit(self)
+        elif action == apply_to_all_action:
+            self.apply_rest_to_all_requested.emit(self)
+
+    def contextMenuEvent(self, event):
+        """Show right-click context menu with Insert/Move/Delete options."""
+        menu = QMenu(self)
+
+        # Get parent table to check position
+        parent_table = self.parent()
+        is_first = False
+        is_last = False
+
+        # Try to determine if this is first or last row
+        if hasattr(parent_table, 'rows'):
+            try:
+                row_index = parent_table.rows.index(self)
+                is_first = (row_index == 0)
+                is_last = (row_index == len(parent_table.rows) - 1)
+            except (ValueError, AttributeError):
+                pass
+
+        # Move actions
+        move_up = menu.addAction("Move Up")
+        move_up.setEnabled(not is_first)  # Disable if first item
+
+        move_down = menu.addAction("Move Down")
+        move_down.setEnabled(not is_last)  # Disable if last item
+
+        menu.addSeparator()
+
+        # Insert actions
         insert_above = menu.addAction("Insert Above")
         insert_below = menu.addAction("Insert Below")
+
         menu.addSeparator()
+
+        # Delete action
         delete_action = menu.addAction("Delete")
 
         action = menu.exec(event.globalPos())
 
-        if action == insert_above:
+        if action == move_up:
+            self.move_up_requested.emit(self)
+        elif action == move_down:
+            self.move_down_requested.emit(self)
+        elif action == insert_above:
             self.insert_above_requested.emit(self)
         elif action == insert_below:
             self.insert_below_requested.emit(self)
@@ -183,3 +292,56 @@ class WorkoutEditorRow(GenericWidget):
             tuple[Workout, int]: (workout object, rest time in seconds)
         """
         return self.workout, self.rest_seconds
+
+    def mousePressEvent(self, event):
+        """Handle mouse press for drag initiation."""
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.drag_start_position = event.pos()
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        """Handle mouse move to start drag operation."""
+        if not (event.buttons() & Qt.MouseButton.LeftButton):
+            return
+        if not self.drag_start_position:
+            return
+
+        # Check if we've moved far enough to start a drag
+        if (event.pos() - self.drag_start_position).manhattanLength() < 10:
+            return
+
+        # Start drag operation
+        drag = QDrag(self)
+        mime_data = QMimeData()
+        mime_data.setText(str(id(self)))  # Store row ID
+        drag.setMimeData(mime_data)
+
+        # Execute drag
+        drag.exec(Qt.DropAction.MoveAction)
+
+    def dragEnterEvent(self, event):
+        """Accept drag enter if it's a workout row."""
+        if event.mimeData().hasText():
+            event.acceptProposedAction()
+
+    def dragMoveEvent(self, event):
+        """Accept drag move events."""
+        if event.mimeData().hasText():
+            event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        """Handle drop event - delegate to parent table."""
+        if event.mimeData().hasText():
+            # Get the dragged row ID
+            dragged_id = int(event.mimeData().text())
+            # Find the dragged row
+            parent_table = self.parent()
+            if hasattr(parent_table, 'rows'):
+                dragged_row = next((r for r in parent_table.rows if id(r) == dragged_id), None)
+                if dragged_row and dragged_row != self:
+                    # Get target index
+                    target_index = parent_table.rows.index(self)
+                    # Notify parent to handle the reorder
+                    if hasattr(parent_table, 'reorder_row'):
+                        parent_table.reorder_row(dragged_row, target_index)
+            event.acceptProposedAction()

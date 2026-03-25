@@ -600,7 +600,7 @@
         "bent-over rows": {
             "description": "bent forward at hip, pull barbell to chest",
             "equipment": [
-                "barbell"
+                "dumbbell"
             ],
             "intensity": "medium",
             "target": [
@@ -890,36 +890,37 @@
             ],
             "energy": 13
         },
-        "side kicks": {
-            "description": "yoko geri - lateral kicks with hip rotation",
-            "equipment": [],
-            "intensity": "high",
-            "target": [
-                "legs",
-                "core"
+        "bojutsu front spin": {
+            "description": "with a bo staff, perform a front spin",
+            "equipment": [
+                "bo_staff"
             ],
-            "energy": 13
-        },
-        "roundhouse kicks": {
-            "description": "mawashi geri - circular kicks targeting mid-section",
-            "equipment": [],
-            "intensity": "high",
-            "target": [
-                "legs",
-                "core"
-            ],
-            "energy": 13
-        },
-        "punching combinations": {
-            "description": "tsuki waza - rapid punch sequences with proper form",
-            "equipment": [],
-            "intensity": "high",
+            "intensity": "low",
             "target": [
                 "arms",
-                "shoulders",
-                "core"
+                "shoulders"
             ],
-            "energy": 13
+            "sub_workouts": [
+                "bojutsu front spin clockwise",
+                "bojutsu front spin anti-clockwise"
+            ],
+            "energy": 7
+        },
+        "bojutsu side spin": {
+            "description": "with a bo staff, perform a side spin",
+            "equipment": [
+                "bo_staff"
+            ],
+            "intensity": "low",
+            "target": [
+                "arms",
+                "shoulders"
+            ],
+            "sub_workouts": [
+                "bojutsu side spin clockwise",
+                "bojutsu side spin anti-clockwise"
+            ],
+            "energy": 7
         },
         "blocking drills": {
             "description": "uke waza - defensive blocking techniques in sequence",
@@ -931,24 +932,6 @@
             ],
             "energy": 9
         },
-        "kata practice": {
-            "description": "traditional karate forms with focus and precision",
-            "equipment": [],
-            "intensity": "medium",
-            "target": [
-                "full_body"
-            ],
-            "energy": 9
-        },
-        "shadow sparring": {
-            "description": "kumite practice - fighting movements without contact",
-            "equipment": [],
-            "intensity": "high",
-            "target": [
-                "full_body"
-            ],
-            "energy": 13
-        },
         "knee strikes": {
             "description": "hiza geri - powerful knee strikes with hip drive",
             "equipment": [],
@@ -959,25 +942,49 @@
             ],
             "energy": 13
         },
-        "elbow strikes": {
-            "description": "empi uchi - close range elbow striking techniques",
+        "junzuki kiba dachi": {
+            "description": "front punch in horse riding stance",
             "equipment": [],
-            "intensity": "high",
+            "intensity": "medium",
             "target": [
                 "arms",
+                "shoulders",
                 "core"
             ],
             "energy": 13
         },
-        "stance training": {
-            "description": "kihon dachi - hold and transition between fighting stances",
+        "gyakuzuki kiba dachi": {
+            "description": "cross punch in horse riding stance",
             "equipment": [],
             "intensity": "medium",
             "target": [
-                "legs",
+                "arms",
+                "shoulders",
                 "core"
             ],
-            "energy": 9
+            "energy": 13
+        },
+        "junzuki dachi": {
+            "description": "front punch walking forwards in forward stance",
+            "equipment": [],
+            "intensity": "medium",
+            "target": [
+                "arms",
+                "shoulders",
+                "core"
+            ],
+            "energy": 13
+        },
+        "gyakuzuki dachi": {
+            "description": "reverse punch walking forwards in forward stance",
+            "equipment": [],
+            "intensity": "medium",
+            "target": [
+                "arms",
+                "shoulders",
+                "core"
+            ],
+            "energy": 13
         }
     },
     "flexibility": {

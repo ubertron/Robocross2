@@ -12,8 +12,8 @@ from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import QSettings, QSize
-from PySide6.QtGui import QFont, QPixmap
-from PySide6.QtWidgets import QTabWidget, QSplashScreen, QFileDialog
+from PySide6.QtGui import QFont, QPixmap, QClipboard
+from PySide6.QtWidgets import QTabWidget, QSplashScreen, QFileDialog, QApplication
 
 from core import DEVELOPER, logging_utils, splash_screen_manager, SANS_SERIF_FONT, CODE_FONT
 from core.version_info import VersionInfo
@@ -22,7 +22,7 @@ from core.core_paths import image_path, DATA_DIR
 from robocross import APP_NAME, REST_PERIOD
 from robocross.parameters_widget import ParametersWidget
 from robocross.routine import Routine
-from robocross.viewer import Viewer
+from robocross.viewer_v2 import ViewerV2
 from robocross.workout import Workout
 from robocross.robocross_enums import Equipment, Intensity, AerobicType, Target
 from widgets.generic_widget import GenericWidget
@@ -34,9 +34,10 @@ LOGGER = logging_utils.get_logger(name=__name__, level=logging.INFO, handlers=[F
 VERSIONS = (
     VersionInfo(name=APP_NAME, version='1.0', codename='Alpha', info='Initial release'),
     VersionInfo(name=APP_NAME, version='2.0', codename='Colt Seavers', info='Revamp'),
-    VersionInfo(name=APP_NAME, version='2.1', codename='MacGyver', info='Icon buttons, save/load sessions, sub-workouts'),
-    VersionInfo(name=APP_NAME, version='2.2', codename='Michael Knight', info='Full workout editor with editable table'),
-    VersionInfo(name=APP_NAME, version='2.3', codename='Mr. Miyagi', info='Combat & flexibility categories, Random/Sequence modes'),
+    VersionInfo(name=APP_NAME, version='2.0.1', codename='MacGyver', info='Icon buttons, save/load sessions, sub-workouts'),
+    VersionInfo(name=APP_NAME, version='2.0.2', codename='Michael Knight', info='Full workout editor with editable table'),
+    VersionInfo(name=APP_NAME, version='2.0.3', codename='Mr. Miyagi', info='Combat & flexibility categories, Random/Sequence modes'),
+    VersionInfo(name=APP_NAME, version='2.0.4', codename='Stringfellow Hawk', info='Player v2 with workout images'),
 )
 SPLASH_SCREEN = image_path("splashscreen_640.png")
 ROBOCROSS_LOGO = image_path("robocross.png")
@@ -74,7 +75,7 @@ class Robocross(GenericWidget):
         self.parameters_widget: ParametersWidget = ParametersWidget()
         self.form = self.parameters_widget.form
         self.tab_widget.addTab(self.parameters_widget, 'Editor')
-        self.viewer: Viewer = Viewer()
+        self.viewer: ViewerV2 = ViewerV2()
         self.tab_widget.addTab(self.viewer, 'Player')
         self.rest_time = 0
         self.routine = None
@@ -90,12 +91,14 @@ class Robocross(GenericWidget):
         self.parameters_widget.save_button_clicked.connect(self.save_button_clicked)
         self.parameters_widget.build_button_clicked.connect(self.build_button_clicked)
         self.parameters_widget.add_exercise_clicked.connect(self.add_exercise_button_clicked)
+        self.parameters_widget.copy_to_clipboard_clicked.connect(self.copy_to_clipboard_button_clicked)
         self.parameters_widget.workout_name_changed.connect(self.on_workout_name_changed)
         self.parameters_widget.editor_table.workout_list_changed.connect(self.on_workout_list_changed)
+        self.parameters_widget.editor_table.add_exercise_requested.connect(self.add_exercise_button_clicked)
+        self.tab_widget.currentChanged.connect(self.on_tab_changed)
         self.setMinimumWidth(self.minimum_width)
-        self.viewer.stopwatch.play_pause_button.setEnabled(False)
-        self.viewer.stopwatch.reset_button.setEnabled(False)
-        self.viewer.scroll_widget.setVisible(False)
+        # ViewerV2 doesn't have separate play/pause buttons on stopwatch - they're in the timer row
+        # ViewerV2 doesn't have scroll_widget
         self.resize(self.app_size)
 
         # Auto-load the last workout if available
@@ -109,12 +112,8 @@ class Robocross(GenericWidget):
     def app_size(self, value: QSize):
         self._app_size = value
         self.settings.setValue(self.app_size_key, value)
-        self.viewer.info_font = QFont(SANS_SERIF_FONT, int(value.width() / 32))
-        self.viewer.progress_bar_font = QFont(SANS_SERIF_FONT, int(value.height() / 16))
-        self.viewer.progress_bar.setFixedHeight(int(value.height() / 10))
-        self.viewer.resize_stopwatch()
-        self.viewer.chip_font = QFont(SANS_SERIF_FONT, int(value.height() / 36))
-        self.viewer.resize_scroll_widget()
+        # ViewerV2 uses fixed font sizes in its setup_ui() method
+        # Dynamic font resizing is not implemented in v2
 
     @property
     def date_time_string(self) -> str:
@@ -258,10 +257,7 @@ class Robocross(GenericWidget):
         self.workout_list = []
 
         # Reset viewer
-        self.viewer.stopwatch.play_pause_button.setEnabled(False)
-        self.viewer.stopwatch.reset_button.setEnabled(False)
-        self.viewer.scroll_widget.setVisible(False)
-        self.viewer.info = 'create a workout'
+        # ViewerV2 doesn't have stopwatch play/pause buttons or scroll_widget
         self.viewer.workout_name = "Untitled Workout"
 
         # Update info
@@ -307,23 +303,8 @@ class Robocross(GenericWidget):
                         self.form.workout_name
                     )
 
-                    # Enable viewer
-                    self.viewer.stopwatch.play_pause_button.setEnabled(True)
-                    self.viewer.stopwatch.reset_button.setEnabled(True)
-                    self.viewer.scroll_widget.setVisible(True)
-
-                    # Show first workout's description instead of just "get ready..."
-                    if self.viewer.workout_list and len(self.viewer.workout_list) > 0:
-                        first_workout = self.viewer.workout_list[0]
-                        description = f"{first_workout.description}." if first_workout.description else "(no details)"
-                        self.viewer.info = (
-                            f"<span style='font-weight: bold;'>Ready to start</span><br />"
-                            f"<span style='font-style:italic'>First exercise: {first_workout.name.replace('_', ' ').title()}</span><br />"
-                            f"<span style='font-style:italic'>Duration: {first_workout.time_nice}</span><br /><br />"
-                            f"{description.capitalize()}"
-                        )
-                    else:
-                        self.viewer.info = 'get ready...'
+                    # ViewerV2 doesn't have stopwatch buttons or scroll_widget
+                    # Display is automatically updated by update_display() call in workout_list setter
 
                     self.viewer.workout_name = self.form.workout_name or "New Workout"
                     self.viewer.workout_cycles = self.form.workout_cycles  # NEW: Set circuit cycles on viewer
@@ -338,21 +319,61 @@ class Robocross(GenericWidget):
                 progress.close()
 
     def add_exercise_button_clicked(self):
-        """Add blank exercise row to editor."""
-        if self.parameters_widget.editor_table.available_exercises:
-            default_workout = self.parameters_widget.editor_table._create_default_workout()
-            default_workout.time = self.form.interval  # Use interval as default
-            self.parameters_widget.editor_table.add_row(
-                default_workout,
-                self.form.rest_time
-            )
-            LOGGER.info("Added new exercise row")
+        """Show exercise type dialog and add random exercise from selected category."""
+        from robocross.exercise_type_dialog import ExerciseTypeDialog
+        from robocross.workout_data import WorkoutData
+        from dataclasses import replace
+        import random
+
+        # Get available categories
+        workout_data = WorkoutData()
+        categories = workout_data.categories
+
+        # Show dialog
+        dialog = ExerciseTypeDialog(categories, parent=self)
+        result = dialog.exec()
+
+        if result == ExerciseTypeDialog.DialogCode.Accepted:
+            selected_category = dialog.get_selected_category()
+            if selected_category:
+                # Get workouts for this category
+                category_workouts = workout_data.get_workouts_by_category(selected_category)
+
+                if category_workouts:
+                    # Pick random workout from category
+                    random_workout = random.choice(category_workouts)
+
+                    # Create a copy with updated time (don't modify original)
+                    workout_copy = replace(random_workout, time=self.form.interval)
+
+                    # Add to editor table
+                    self.parameters_widget.editor_table.add_row(
+                        workout_copy,
+                        self.form.rest_time
+                    )
+                    LOGGER.info(f"Added random {selected_category} exercise: {random_workout.name}")
+                else:
+                    LOGGER.warning(f"No exercises found for category: {selected_category}")
+        else:
+            LOGGER.info("Add exercise cancelled")
 
     def on_workout_name_changed(self, workout_name: str):
         """Handle workout name change from parameters widget."""
         # Update viewer with formatted name
         formatted_name = workout_name.replace('_', ' ').title() if workout_name else "Untitled Workout"
         self.viewer.workout_name = formatted_name
+
+    def on_tab_changed(self, index: int):
+        """Handle tab changes - update viewer workout name when switching to Player tab."""
+        # Index 1 is the Player tab
+        if index == 1:
+            # Update viewer workout name from editor table
+            workout_name = self.parameters_widget.editor_table.workout_name
+            if workout_name:
+                formatted_name = workout_name.replace('_', ' ').title()
+                self.viewer.workout_name = formatted_name
+            else:
+                self.viewer.workout_name = "Untitled Workout"
 
     def on_workout_list_changed(self):
         """Handle workout list changes from editor table."""
@@ -377,8 +398,11 @@ class Robocross(GenericWidget):
                     )
                     full_workout_list.append(rest_period)
 
+            # Sync workout cycles BEFORE setting workout_list (so list is expanded correctly)
+            self.viewer.workout_cycles = self.form.workout_cycles
             self.workout_list = full_workout_list
-            # Update viewer if needed
+            # Update viewer workout name from editor table
+            self.viewer.workout_name = self.parameters_widget.editor_table.workout_name or "Untitled Workout"
             # Note: Viewer updates happen when stopwatch runs, so this mainly keeps data in sync
 
     def save_button_clicked(self):
@@ -408,16 +432,21 @@ class Robocross(GenericWidget):
             "JSON Files (*.json)"
         )
 
+        if not file_path:
+            LOGGER.info("Save cancelled by user")
+            self.parameters_widget.info = "Save cancelled"
+            return
+
         if file_path:
             workouts_data = []
             for workout in workouts:
                 workout_dict = {
                     "name": workout.name,
                     "description": workout.description,
-                    "equipment": [eq.name for eq in workout.equipment] if workout.equipment else [],
+                    "equipment": [eq.name for eq in workout.equipment if eq is not None] if workout.equipment else [],
                     "intensity": workout.intensity.name,
                     "aerobic_type": workout.aerobic_type.name,
-                    "target": [t.name for t in workout.target],
+                    "target": [t.name for t in workout.target if t is not None] if workout.target else [],
                     "time": workout.time,
                     "sub_workouts": workout.sub_workouts
                 }
@@ -438,7 +467,12 @@ class Robocross(GenericWidget):
             with open(file_path, 'w') as f:
                 json.dump(session_data, f, indent=4)
 
+            # Update last workout path so this file auto-loads on next startup
+            self.settings.setValue(self.last_workout_path_key, file_path)
+
             LOGGER.info(f"Saved: {file_path}")
+            filename = Path(file_path).name
+            self.parameters_widget.info = f"Workout saved to {filename}"
 
     def _load_workout_from_file(self, file_path: str, show_info: bool = True):
         """Load workout and populate editor table."""
@@ -538,23 +572,8 @@ class Robocross(GenericWidget):
             self.parameters_widget.editor_table.workout_name = workout_name
             self.parameters_widget.update_summary()
 
-            # Enable viewer
-            self.viewer.stopwatch.play_pause_button.setEnabled(True)
-            self.viewer.stopwatch.reset_button.setEnabled(True)
-            self.viewer.scroll_widget.setVisible(True)
-
-            # Show first workout's description instead of just "get ready..."
-            if self.viewer.workout_list and len(self.viewer.workout_list) > 0:
-                first_workout = self.viewer.workout_list[0]
-                description = f"{first_workout.description}." if first_workout.description else "(no details)"
-                self.viewer.info = (
-                    f"<span style='font-weight: bold;'>Ready to start</span><br />"
-                    f"<span style='font-style:italic'>First exercise: {first_workout.name.replace('_', ' ').title()}</span><br />"
-                    f"<span style='font-style:italic'>Duration: {first_workout.time_nice}</span><br /><br />"
-                    f"{description.capitalize()}"
-                )
-            else:
-                self.viewer.info = 'get ready...'
+            # ViewerV2 doesn't have stopwatch buttons, scroll_widget, or info label
+            # Display is automatically updated by update_display() call in workout_list setter
 
             self.viewer.workout_name = parse_name_nicely(workout_name)
 
@@ -579,6 +598,127 @@ class Robocross(GenericWidget):
 
         if file_path:
             self._load_workout_from_file(file_path, show_info=True)
+
+    def copy_to_clipboard_button_clicked(self):
+        """Export workout data to clipboard as TSV for spreadsheet paste."""
+        # Get workout data from editor
+        workouts, rest_times = self.parameters_widget.get_workout_list()
+
+        # Validation: Check if workout is empty
+        if not workouts:
+            LOGGER.warning("No exercises in workout - cannot copy to clipboard")
+            self.parameters_widget.info = "No exercises to export. Add exercises first."
+            return
+
+        # Get workout cycles from form
+        workout_cycles = self.form.workout_cycles
+
+        # Build exercise list (repeat for cycles if > 1)
+        full_workout_list = []
+        full_rest_list = []
+
+        for cycle in range(workout_cycles):
+            for i, workout in enumerate(workouts):
+                full_workout_list.append(workout)
+                if i < len(rest_times):
+                    full_rest_list.append(rest_times[i])
+
+        # Generate TSV data
+        tsv_lines = []
+
+        # Date header (merged effect: first column has date, others empty)
+        import platform
+        if platform.system() == "Windows":
+            date_format = "%#d %B %Y"  # Windows uses %#d
+        else:
+            date_format = "%-d %B %Y"  # Unix uses %-d
+        current_date = datetime.now().strftime(date_format)
+        tsv_lines.append(f"{current_date}\t\t")
+
+        # Column headers
+        tsv_lines.append("Item\tDuration\tCalories")
+
+        # Calculate start row for exercises (row 3 in spreadsheet)
+        data_start_row = 3
+
+        # Exercise rows
+        total_rest_seconds = 0
+        total_rest_calories = 0
+
+        from robocross.workout_data import WorkoutData
+        workout_data = WorkoutData()
+
+        for i, workout in enumerate(full_workout_list):
+            # Get exercise name (formatted nicely)
+            exercise_name = workout.name.replace('_', ' ').title()
+
+            # Format duration as H:MM:SS
+            duration_str = self.format_time_hms(workout.time)
+
+            # Calculate calories
+            energy = 0
+            if workout.energy is not None:
+                energy = workout.energy
+            elif workout.name in workout_data.data:
+                energy = workout_data.data[workout.name].get("energy", 0)
+            else:
+                # Fallback based on intensity
+                intensity_energy = {"high": 13, "medium": 9, "low": 6}
+                energy = intensity_energy.get(workout.intensity.name, 9)
+
+            calories = int(energy * (workout.time / 60.0))
+
+            # Add exercise row
+            tsv_lines.append(f"{exercise_name}\t{duration_str}\t{calories}")
+
+            # Accumulate rest time if available
+            if i < len(full_rest_list):
+                rest_seconds = full_rest_list[i]
+                total_rest_seconds += rest_seconds
+                # Calculate rest calories (assume low intensity = 6 cal/min)
+                total_rest_calories += int(6 * (rest_seconds / 60.0))
+
+        # Total rest time row
+        if total_rest_seconds > 0:
+            rest_duration_str = self.format_time_hms(total_rest_seconds)
+            tsv_lines.append(f"Total rest time\t{rest_duration_str}\t{total_rest_calories}")
+
+        # Calculate row numbers for SUM formulas
+        data_end_row = data_start_row + len(full_workout_list) - 1
+        if total_rest_seconds > 0:
+            data_end_row += 1  # Include rest row in sum
+
+        # Total row with formulas
+        duration_formula = f"=SUM(B{data_start_row}:B{data_end_row})"
+        calories_formula = f"=SUM(C{data_start_row}:C{data_end_row})"
+        tsv_lines.append(f"Total\t{duration_formula}\t{calories_formula}")
+
+        # Join all lines with newlines
+        tsv_data = "\n".join(tsv_lines)
+
+        # Copy to clipboard
+        clipboard = QApplication.clipboard()
+        clipboard.setText(tsv_data)
+
+        # Log success
+        exercise_count = len(full_workout_list)
+        LOGGER.info(f"Copied {exercise_count} exercises to clipboard as TSV")
+        self.parameters_widget.info = f"Copied {exercise_count} exercises to clipboard"
+
+    def format_time_hms(self, seconds: int) -> str:
+        """
+        Format seconds as H:MM:SS for spreadsheet.
+
+        Args:
+            seconds: Time in seconds
+
+        Returns:
+            Formatted string like "0:01:00" for 60 seconds
+        """
+        hours = seconds // 3600
+        minutes = (seconds % 3600) // 60
+        secs = seconds % 60
+        return f"{hours}:{minutes:02d}:{secs:02d}"
 
     def resizeEvent(self, event):
         """This method is called whenever the widget is resized."""

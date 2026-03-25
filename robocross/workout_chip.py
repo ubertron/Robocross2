@@ -18,7 +18,6 @@ LOGGER = get_logger(__name__, level=logging.DEBUG)
 class WorkoutChip(GridWidget):
     """Widget to represent a workout."""
 
-    progress_bar_style = 'background-color: rgba(0, 0, 0, 0.3)'  # Semi-transparent overlay
     padding = 5  # Match editor button padding
     fixed_height = 30  # Match editor button height
     time_reached: Signal = Signal()
@@ -79,7 +78,9 @@ class WorkoutChip(GridWidget):
     def setup_ui(self):
         """Setup ui."""
         self.progress_label.setAlignment(Qt.AlignLeft)
-        self.progress_label.setStyleSheet(self.progress_bar_style)
+        # Progress overlay will show bright color (set in start())
+        self.progress_label.setFixedHeight(self.fixed_height)  # Match background height
+        self.progress_label.setContentsMargins(0, 0, 0, 0)  # No margins for perfect alignment
         self.timer.timeout.connect(self.update_progress)
         self.timer.setInterval(self.period)
         self.reset()
@@ -89,6 +90,7 @@ class WorkoutChip(GridWidget):
         return f"Workout: {self.workout.name.title()}"
 
     def reset(self):
+        # Background is dark (not_started), progress will reveal bright color
         bg_color = self._category_colors['not_started_bg']
         text_color = self._category_colors['text']
         self.background.setStyleSheet(f'background-color: {bg_color}; border: 1px solid #555;')
@@ -101,9 +103,12 @@ class WorkoutChip(GridWidget):
     def start(self):
         self.timer.start()
         self.running = True
-        bg_color = self._category_colors['in_progress_bg']
+        # Background stays dark, progress overlay will be bright color
+        bg_color = self._category_colors['not_started_bg']  # Keep dark background
+        progress_color = self._category_colors['in_progress_bg']  # Bright overlay
         text_color = self._category_colors['text']
         self.background.setStyleSheet(f'background-color: {bg_color}; border: 1px solid #555;')
+        self.progress_label.setStyleSheet(f'background-color: {progress_color};')  # Bright progress overlay
         self.label.setStyleSheet(f'color: {text_color}; font-weight: normal;')
 
     def pause(self):
@@ -115,13 +120,15 @@ class WorkoutChip(GridWidget):
         if self.progress == 1.0:
             self.timer.stop()
             self.progress_visible = False
+            # Show full bright finished color
             bg_color = self._category_colors['finished_bg']
             text_color = self._category_colors['text']
             self.background.setStyleSheet(f'background-color: {bg_color}; border: 1px solid #555;')
             self.label.setStyleSheet(f'color: {text_color}; font-weight: normal;')
             self.time_reached.emit()
         else:
-            new_width  = int(self.size().width() * self.progress)
+            # Grow bright progress overlay from left to right
+            new_width = int(self.size().width() * self.progress)
             self.progress_label.setFixedWidth(new_width)
 
     @property

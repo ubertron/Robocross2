@@ -9,13 +9,15 @@ APP_NAME: str = "Robocross"
 
 # Category color constants (RGB hex values)
 CATEGORY_COLORS = {
-    'cardio': '#E74C3C',      # Energetic red-orange
-    'strength': '#3498DB',    # Strong blue
+    'cardio': '#3498DB',      # Energetic blue
+    'strength': '#E74C3C',    # Strong red-orange
     'combat': '#8E44AD',      # Aggressive purple
     'flexibility': '#27AE60', # Calm green
     'recovery': '#95A5A6',    # Neutral grey
 }
 SCROLL_PANEL_WIDTH: int = 320
+IMAGE_PADDING: int = 20  # Padding/margin for workout images in pixels
+TOOL_TIP_SIZE: int = 32  # Font size for transport button tooltips
 
 def get_category_color(category: str) -> str:
     """Get the color for a given category name."""

@@ -85,16 +85,28 @@ class Stopwatch(GenericWidget):
         self.targets = {}
         self.targets.update(target_dict)
 
-    def play_pause_button_clicked(self):
+    def play(self):
+        """Start the stopwatch timer."""
         if not self.running:
+            LOGGER.debug(f"⏯ Starting stopwatch timer (period={self.period}ms)")
             self.timer.start(self.period)
             self.play_pause_button.setIcon(self.pause_icon)
             self.running = True
-            run_mode = RunMode.play
-        else:
+
+    def pause(self):
+        """Pause the stopwatch timer."""
+        if self.running:
+            LOGGER.debug("⏸ Pausing stopwatch timer")
             self.timer.stop()
             self.play_pause_button.setIcon(self.play_icon)
             self.running = False
+
+    def play_pause_button_clicked(self):
+        if not self.running:
+            self.play()
+            run_mode = RunMode.play
+        else:
+            self.pause()
             run_mode = RunMode.paused
         self.play_pause_clicked.emit(run_mode)
 
@@ -114,8 +126,10 @@ class Stopwatch(GenericWidget):
 
         if now_str in self.targets and now_str not in self.completed_targets:
             message = self.targets[now_str]
+            LOGGER.debug(f"⏱ TIME TARGET HIT: {now_str} → {message}")
             self.time_reached.emit(now_str, message)
             self.completed_targets.append(now_str)
+            LOGGER.debug(f"   Emitted time_reached signal for: {now_str}")
 
     def _speak(self, t: str, message: str):
         """Queue text to be spoken in the background."""
