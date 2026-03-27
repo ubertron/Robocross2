@@ -7,18 +7,19 @@ from datetime import timedelta
 from pathlib import Path
 import tempfile
 
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import Qt, QSize, QSettings
 from PySide6.QtGui import QFont, QMovie, QIcon, QPixmap
 from PySide6.QtWidgets import QSizePolicy, QLabel, QPushButton
 
+from functools import partial
 from core.core_enums import Alignment
-from core import logging_utils
+from core import logging_utils, DEVELOPER
 from core.speaker import Speaker, Voice
 from core import SANS_SERIF_FONT
 from core.core_paths import image_path
 from core.image_utils import fill_foreground
 from music_player.music_player_ui import MusicPlayer
-from robocross import REST_PERIOD
+from robocross import REST_PERIOD, APP_NAME
 from robocross.robocross_enums import AerobicType, RunMode, Intensity
 from robocross.workout import Workout
 from robocross.workout_chip import WorkoutChip
@@ -44,6 +45,11 @@ class ViewerV2(GenericWidget):
     def __init__(self):
         super(ViewerV2, self).__init__(title="Workout Player v2", margin=0, spacing=5)
 
+        # Settings
+        self.settings = QSettings(DEVELOPER, APP_NAME)
+        self.narration_volume_key = "narration_volume"
+        self.default_narration_volume = 7
+
         # State management (reused from v1)
         self._workout_list = []
         self._base_workout_list = []
@@ -56,8 +62,12 @@ class ViewerV2(GenericWidget):
         self.sub_workout_times = {}
         self._rest_time = 0
 
-        # Voice for announcements
-        self.mac_voice = Speaker(voice=random.choice([Voice.Samantha, Voice.Daniel]))
+        # Voice for announcements (with volume)
+        narration_volume = self.settings.value(self.narration_volume_key, self.default_narration_volume, type=int)
+        self.mac_voice = Speaker(
+            voice=random.choice([Voice.Samantha, Voice.Daniel]),
+            volume=narration_volume / 10.0
+        )
 
         # Cache for tinted reset icon
         self._tinted_reset_icon_path = None
@@ -143,6 +153,29 @@ class ViewerV2(GenericWidget):
         self.music_player.play_pause_button.setVisible(False)
         self.music_player.next_button.setVisible(False)
         self.music_player.mute_button.setVisible(False)
+
+        # Narration volume controls
+        narration_widget = self.add_widget(GenericWidget(alignment=Alignment.horizontal))
+        narration_widget.setFixedHeight(40)
+        narration_widget.add_label("Narration Volume:")
+        self.narration_volume_label = narration_widget.add_label("")
+        narration_widget.add_stretch()
+        self.narration_volume_down = narration_widget.add_button(
+            text='-',
+            clicked=partial(self._narration_volume_changed, -1)
+        )
+        self.narration_volume_down.setFixedWidth(32)
+        self.narration_volume_up = narration_widget.add_button(
+            text='+',
+            clicked=partial(self._narration_volume_changed, 1)
+        )
+        self.narration_volume_up.setFixedWidth(32)
+        self.narration_mute_button = narration_widget.add_button(
+            text='Mute',
+            clicked=partial(self._narration_volume_changed, 0)
+        )
+        self.narration_mute_button.setCheckable(True)
+        self._update_narration_volume_display()
 
         # Title
         self.title_label = self.add_label("")
@@ -829,6 +862,25 @@ class ViewerV2(GenericWidget):
             self.pause_button.setToolTip(f"<span style='font-size: {TOOL_TIP_SIZE}pt;'>Pause workout</span>")
             LOGGER.debug("   → Switching to PLAY mode")
             self.play_workout()
+
+    def _narration_volume_changed(self, delta: int):
+        """Handle narration volume change."""
+        if delta == 0:  # Mute toggle
+            current_volume = self.settings.value(self.narration_volume_key, self.default_narration_volume, type=int)
+            mute_factor = 0.25 if self.narration_mute_button.isChecked() else 1.0
+            self.mac_voice.volume = (current_volume / 10.0) * mute_factor
+        else:
+            current_volume = self.settings.value(self.narration_volume_key, self.default_narration_volume, type=int)
+            new_volume = max(0, min(10, current_volume + delta))
+            self.settings.setValue(self.narration_volume_key, new_volume)
+            mute_factor = 0.25 if self.narration_mute_button.isChecked() else 1.0
+            self.mac_voice.volume = (new_volume / 10.0) * mute_factor
+        self._update_narration_volume_display()
+
+    def _update_narration_volume_display(self):
+        """Update narration volume label."""
+        volume = self.settings.value(self.narration_volume_key, self.default_narration_volume, type=int)
+        self.narration_volume_label.setText(f"{volume}")
 
     def go_back(self):
         """Go back to previous workout (skip rest periods)."""

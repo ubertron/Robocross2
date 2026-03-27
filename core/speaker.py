@@ -72,17 +72,41 @@ class Voice(Enum):
 class Speaker(QObject):
     speaking_finished = Signal()
 
-    def __init__(self, voice: Optional[Voice] = None, parent: QWidget | None = None):
+    def __init__(self, voice: Optional[Voice] = None, volume: float = 1.0, parent: QWidget | None = None):
         super().__init__(parent=parent)
         self.voice: str = voice.name.replace("_", "-") if voice else random.choice(Voice.names())
+        self._volume = volume  # 0.0 to 1.0
+
+    @property
+    def volume(self) -> float:
+        """Get volume (0.0 to 1.0)."""
+        return self._volume
+
+    @volume.setter
+    def volume(self, value: float):
+        """Set volume (0.0 to 1.0)."""
+        self._volume = max(0.0, min(1.0, value))
 
     def speak(self, text: str):
         """Text to speech.
 
         add '[[slnc 500]]' to text string to include a pause of 500 ms
         """
+        # Get current system volume to restore later
+        get_volume_cmd = "osascript -e 'output volume of (get volume settings)'"
+        current_volume = int(os.popen(get_volume_cmd).read().strip())
+
+        # Set temporary volume for narration (0-100 scale)
+        target_volume = int(self._volume * 100)
+        os.system(f"osascript -e 'set volume output volume {target_volume}'")
+
+        # Speak
         process = Popen(['say', '-v', self.voice, text])
         process.wait()
+
+        # Restore original volume
+        os.system(f"osascript -e 'set volume output volume {current_volume}'")
+
         self.speaking_finished.emit()
 
     def save(self, text: str, file_path: Optional[Path] = None):

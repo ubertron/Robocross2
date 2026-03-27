@@ -9,7 +9,7 @@ from typing import Sequence
 from core.logging_utils import get_logger
 from robocross.workout import Workout
 from robocross.robocross_enums import Equipment, Intensity, AerobicType, Target
-from robocross import DATA_FILE_PATH
+from core.core_paths import DATA_FILE_PATH
 
 
 DEFAULT_TIME = 120

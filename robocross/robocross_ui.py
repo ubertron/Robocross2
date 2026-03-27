@@ -26,6 +26,7 @@ from robocross.viewer_v2 import ViewerV2
 from robocross.workout import Workout
 from robocross.robocross_enums import Equipment, Intensity, AerobicType, Target
 from widgets.generic_widget import GenericWidget
+from widgets.exercise_editor import ExerciseEditor
 
 LOG_PATH = Path(__file__).parents[1].joinpath("logs/workouts.log")
 FILE_HANDLER = logging_utils.FileHandler(path=LOG_PATH, level=logging.DEBUG)
@@ -38,6 +39,7 @@ VERSIONS = (
     VersionInfo(name=APP_NAME, version='2.0.2', codename='Michael Knight', info='Full workout editor with editable table'),
     VersionInfo(name=APP_NAME, version='2.0.3', codename='Mr. Miyagi', info='Combat & flexibility categories, Random/Sequence modes'),
     VersionInfo(name=APP_NAME, version='2.0.4', codename='Stringfellow Hawk', info='Player v2 with workout images'),
+    VersionInfo(name=APP_NAME, version='2.0.5', codename='Poncharello', info='Exercise Editor'),
 )
 SPLASH_SCREEN = image_path("splashscreen_640.png")
 ROBOCROSS_LOGO = image_path("robocross.png")
@@ -77,6 +79,8 @@ class Robocross(GenericWidget):
         self.tab_widget.addTab(self.parameters_widget, 'Editor')
         self.viewer: ViewerV2 = ViewerV2()
         self.tab_widget.addTab(self.viewer, 'Player')
+        self.exercise_editor = ExerciseEditor()
+        self.tab_widget.addTab(self.exercise_editor, 'Exercise')
         self.rest_time = 0
         self.routine = None
         self.info = ""

@@ -1,5 +1,5 @@
 from pathlib import Path
-from core.core_paths import image_path
+from core.core_paths import image_path, MEDIA_ROOT
 import random
 
 from PySide6.QtCore import Qt, QUrl
@@ -13,7 +13,7 @@ except ImportError:
     HAS_PIL = False
 
 
-MEDIA_ROOT = Path(__file__).parents[1] / "media"
+
 MOVIES_DIR = MEDIA_ROOT / "movies"
 ANIMATIONS_DIR = MEDIA_ROOT / "animations"
 IMAGES_DIR = MEDIA_ROOT / "images"

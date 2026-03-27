@@ -121,17 +121,6 @@
             ],
             "energy": 11.2
         },
-        "cross punches": {
-            "description": "in a squat stance, alternate cross punches in either direction",
-            "equipment": [],
-            "intensity": "medium",
-            "target": [
-                "arms",
-                "abdominals",
-                "legs"
-            ],
-            "energy": 9.8
-        },
         "toe touches": {
             "description": "arms parallel, bend at the hip and touch toes alternately",
             "equipment": [],
@@ -751,7 +740,11 @@
                 "abdominals",
                 "obliques"
             ],
-            "energy": 4.2
+            "energy": 4.2,
+            "sub_workouts": [
+                "left side plank",
+                "right side plank"
+            ]
         },
         "reverse crunches": {
             "description": "lying on back, bring knees to chest",
@@ -985,6 +978,16 @@
                 "core"
             ],
             "energy": 13
+        },
+        "cross punches": {
+            "description": "in a squat stance, alternate cross punches in either direction",
+            "equipment": [],
+            "intensity": "medium",
+            "target": [
+                "arms",
+                "legs"
+            ],
+            "energy": 9.8
         }
     },
     "flexibility": {

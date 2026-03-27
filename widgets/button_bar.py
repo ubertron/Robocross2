@@ -10,8 +10,9 @@ from core.core_enums import Alignment
 from widgets.icon_button import IconButton
 
 class ButtonBar(QWidget):
-    def __init__(self, margin: int = 0, spacing: int = 0):
+    def __init__(self, size: int = 40, margin: int = 0, spacing: int = 0):
         super(ButtonBar, self).__init__()
+        self.size: int = size
         layout = QHBoxLayout()
         layout.setContentsMargins(margin, margin, margin, margin)
         layout.setSpacing(spacing)
@@ -26,8 +27,9 @@ class ButtonBar(QWidget):
             button.clicked.connect(clicked)
         return self.add_widget(button)
 
-    def add_icon_button(self, icon_path: Path, tool_tip: str = "", clicked: Callable | None = None, size: int = 40) -> IconButton:
+    def add_icon_button(self, icon_path: Path, tool_tip: str = "", clicked: Callable | None = None, size: int | None = None) -> IconButton:
         """Add icon button to the layout"""
+        size = size or self.size
         button = IconButton(icon_path=icon_path, tool_tip=tool_tip, size=size)
         if clicked:
             button.clicked.connect(clicked)

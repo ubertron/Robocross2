@@ -1,9 +1,13 @@
 from __future__ import annotations
+
+import json
 from pathlib import Path
 
+from core.core_paths import DATA_FILE_PATH
 from robocross.robocross_enums import WorkoutType
+from robocross.workout_data import WorkoutData
 
-DATA_FILE_PATH: Path = Path(__file__).parent / "workout_data.json"
+
 REST_PERIOD: str = "rest period"
 APP_NAME: str = "Robocross"
 
@@ -18,6 +22,19 @@ CATEGORY_COLORS = {
 SCROLL_PANEL_WIDTH: int = 320
 IMAGE_PADDING: int = 20  # Padding/margin for workout images in pixels
 TOOL_TIP_SIZE: int = 32  # Font size for transport button tooltips
+
+def get_workout_data() -> dict:
+    """Get workout data"""
+    with DATA_FILE_PATH.open("r") as f:
+        data = json.load(f)
+    return data
+
+def get_workout_categories() -> list[str]:
+    """Get workout categories."""
+    return list(get_workout_data().keys())
+
+# Workout categories - loaded dynamically from workout data
+WORKOUT_CATEGORIES = get_workout_categories()
 
 def get_category_color(category: str) -> str:
     """Get the color for a given category name."""
