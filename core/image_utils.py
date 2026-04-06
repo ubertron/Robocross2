@@ -70,12 +70,12 @@ def resize(path: Path, new_width = 320, text_suffix: str = ""):
 
 if __name__ == "__main__":
     from core_paths import image_path, IMAGE_FOLDER
-    # my_path = image_path("open.png")
-    #tint_image(image_path=my_path, rgb=(255, 0, 0), output_path=IMAGE_FOLDER / "open_red.png", factor=.3)
+    my_path = Path("/Users/andrewdavis/Dropbox/Technology/Python3/Projects/Robocross2/images/icons/random.png")
+    # tint_image(image_path=my_path, rgb=LIGHT_GREY, output_path=my_path)
     #fill_background(image_path=my_path, rgb=(255, 0, 0), output_path=IMAGE_FOLDER / "open_red.png")
-    # fill_foreground(path=my_path, rgb=LIGHT_GREY, output_path=IMAGE_FOLDER / "open_grey.png")
+    fill_foreground(path=my_path, rgb=LIGHT_GREY, output_path=my_path)
     # fill_foreground(path=image_path("new.png"), rgb=LIGHT_GREY, output_path=IMAGE_FOLDER / "new_grey.png")
     # fill_foreground(path=image_path("save.png"), rgb=LIGHT_GREY, output_path=IMAGE_FOLDER / "save_grey.png")
-    my_image = image_path('splashscreen.png')
-    print(my_image)
-    resize(path=my_image, new_width=640, text_suffix="_640")
+    # my_image = image_path('splashscreen.png')
+    # print(my_image)
+    # resize(path=my_image, new_width=640, text_suffix="_640")

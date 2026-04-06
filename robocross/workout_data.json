@@ -72,17 +72,6 @@
             ],
             "energy": 16.8
         },
-        "weighted punches": {
-            "description": "continuous punches forward holding weights",
-            "equipment": [
-                "wrist_weights"
-            ],
-            "intensity": "high",
-            "target": [
-                "arms"
-            ],
-            "energy": 14.0
-        },
         "knee raise with twist": {
             "description": "alternate raising the  knee to touch the opposite elbow",
             "equipment": [],
@@ -988,6 +977,17 @@
                 "legs"
             ],
             "energy": 9.8
+        },
+        "weighted punches": {
+            "description": "continuous punches forward holding weights",
+            "equipment": [
+                "wrist_weights"
+            ],
+            "intensity": "high",
+            "target": [
+                "arms"
+            ],
+            "energy": 14.0
         }
     },
     "flexibility": {

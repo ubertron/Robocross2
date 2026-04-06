@@ -97,6 +97,7 @@ class Robocross(GenericWidget):
         self.parameters_widget.add_exercise_clicked.connect(self.add_exercise_button_clicked)
         self.parameters_widget.copy_to_clipboard_clicked.connect(self.copy_to_clipboard_button_clicked)
         self.parameters_widget.workout_name_changed.connect(self.on_workout_name_changed)
+        self.parameters_widget.workout_cycles_changed.connect(self.on_workout_cycles_changed)
         self.parameters_widget.editor_table.workout_list_changed.connect(self.on_workout_list_changed)
         self.parameters_widget.editor_table.add_exercise_requested.connect(self.add_exercise_button_clicked)
         self.tab_widget.currentChanged.connect(self.on_tab_changed)
@@ -218,7 +219,7 @@ class Robocross(GenericWidget):
                 "equipment": [eq.name for eq in workout.equipment] if workout.equipment else [],
                 "intensity": workout.intensity.name,
                 "aerobic_type": workout.aerobic_type.name,
-                "target": [t.name for t in workout.target],
+                "target": [t.name for t in workout.target if t is not None],
                 "time": workout.time,
                 "sub_workouts": workout.sub_workouts
             }
@@ -297,7 +298,27 @@ class Robocross(GenericWidget):
                     equipment_filter=self.parameters_widget.equipment_filter,
                     selected_categories=self.form.selected_categories,
                     workout_structure=self.form.workout_structure,
+                    category_weights=self.form.category_weights,
+                    warm_up=self.form.warm_up,
+                    cool_down=self.form.cool_down,
+                    target_filter=self.form.selected_targets,
                 )
+
+                # Validate that the combination yields results
+                if not self.workout_list:
+                    from PySide6.QtWidgets import QMessageBox
+                    QMessageBox.warning(
+                        self,
+                        "No Workouts Found",
+                        "The current combination of Exercise Types and Exercise Targets doesn't yield any valid workouts.\n\n"
+                        "Please try:\n"
+                        "• Selecting different exercise types\n"
+                        "• Choosing different exercise targets\n"
+                        "• Checking 'All' in Exercise Targets\n"
+                        "• Adjusting equipment filters"
+                    )
+                    progress.close()
+                    return
 
                 if self.workout_list:
                     # Populate editor table
@@ -366,6 +387,14 @@ class Robocross(GenericWidget):
         # Update viewer with formatted name
         formatted_name = workout_name.replace('_', ' ').title() if workout_name else "Untitled Workout"
         self.viewer.workout_name = formatted_name
+
+    def on_workout_cycles_changed(self, cycles: int):
+        """Handle workout cycles change from parameters widget."""
+        # Update viewer with new cycles count and rebuild workout list
+        self.viewer.workout_cycles = cycles
+        # Rebuild the workout list with new cycle count (if we have exercises)
+        if self.parameters_widget.editor_table.rows:
+            self.on_workout_list_changed()
 
     def on_tab_changed(self, index: int):
         """Handle tab changes - update viewer workout name when switching to Player tab."""

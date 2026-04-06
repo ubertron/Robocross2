@@ -190,13 +190,15 @@ def convert_to_data_file():
 
 class WorkoutData:
     def __init__(self, nope_list: Sequence[str] = (), equipment_filter: Sequence[Equipment] = (),
-                 selected_categories: Sequence[str] = None):
+                 selected_categories: Sequence[str] = None, target_filter: Sequence = None):
         """Initialize the workout data.
         Args:
             nope_list (Sequence): The list of workout items to omit.
             equipment_filter (Sequence[Equipment]): The list of equipment items to omit.
             selected_categories (Sequence[str]): The list of category names to include (e.g., ['cardio', 'strength']).
                                                  If None, all categories are included.
+            target_filter (Sequence[Target]): The list of target body parts to include (e.g., [Target.legs, Target.core]).
+                                              If None or empty, all targets are included.
             """
         with DATA_FILE_PATH.open("r") as f:
             loaded_data = json.load(f)
@@ -231,10 +233,12 @@ class WorkoutData:
         self.nope_list = nope_list
         self.equipment_filter = equipment_filter
         self.selected_categories = selected_categories
+        self.target_filter = target_filter if target_filter else []
 
     @property
     def filtered_data(self) -> dict:
         """Data with items removed."""
+        from robocross.robocross_enums import Target
         filtered = {}
         for name, value in self.data.items():
             if name not in self.nope_list:
@@ -242,6 +246,13 @@ class WorkoutData:
                 if self.selected_categories is not None:
                     category = value.get("aerobic_type")
                     if category not in self.selected_categories:
+                        continue
+
+                # Filter by target if target_filter is specified
+                if self.target_filter:
+                    target_list = [Target.__members__.get(x) for x in value.get("target", [])]
+                    # Check if any of the workout's targets match any of the filter targets
+                    if not any(t in self.target_filter for t in target_list if t is not None):
                         continue
 
                 equipment_list = [Equipment.__members__.get(x) for x in value.get("equipment")]
@@ -294,6 +305,36 @@ class WorkoutData:
     def get_workouts_by_category(self, category: str) -> list[Workout]:
         """Get workouts for a specific category."""
         return [x for x in self.workouts if x.aerobic_type.name == category]
+
+    def get_all_workouts_by_category(self, category: str) -> list[Workout]:
+        """Get workouts for a specific category, ignoring selected_categories filter."""
+        all_workouts = []
+        for name, value in self.data.items():
+            if name in self.nope_list:
+                continue
+            if value.get("aerobic_type") != category:
+                continue
+
+            # Filter by equipment only (not by selected categories)
+            equipment_list = [Equipment.__members__.get(eq) for eq in value.get("equipment")]
+            if bool(set(equipment_list).intersection(set(self.equipment_filter))):
+                continue  # Skip if equipment is in filter
+
+            target_list = [Target.__members__.get(t) for t in value.get("target", [])]
+            sub_workouts = value.get("sub_workouts")
+            workout = Workout(
+                name=name,
+                description=value.get("description"),
+                equipment=equipment_list if equipment_list else [],
+                intensity=Intensity.__members__.get(value.get("intensity")),
+                aerobic_type=AerobicType.__members__.get(value.get("aerobic_type")),
+                target=target_list,
+                time=DEFAULT_TIME,
+                sub_workouts=sub_workouts,
+                energy=value.get("energy")
+            )
+            all_workouts.append(workout)
+        return all_workouts
 
 
 if __name__ == "__main__":

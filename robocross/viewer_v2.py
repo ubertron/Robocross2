@@ -532,15 +532,18 @@ class ViewerV2(GenericWidget):
 
         # For workouts with sub-workouts, determine which sub-workout to display
         if self.current_workout.has_sub_workouts:
-            # Get elapsed time within this workout
-            current_time = self.stopwatch.current_time
-            workout_start_time = timedelta(0)
+            # Get elapsed time from stopwatch (QTime to total seconds)
+            elapsed_qtime = self.stopwatch.elapsed
+            current_time_seconds = (elapsed_qtime.hour() * 3600 +
+                                   elapsed_qtime.minute() * 60 +
+                                   elapsed_qtime.second())
 
             # Calculate when this workout started
+            workout_start_time_seconds = 0
             for i in range(self.current_index):
-                workout_start_time += timedelta(seconds=self.workout_list[i].time)
+                workout_start_time_seconds += self.workout_list[i].time
 
-            elapsed_in_workout = (current_time - workout_start_time).total_seconds()
+            elapsed_in_workout = current_time_seconds - workout_start_time_seconds
 
             # Determine which sub-workout we're in
             sub_index = int(elapsed_in_workout // self.current_workout.sub_workout_duration)

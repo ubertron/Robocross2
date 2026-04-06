@@ -194,6 +194,103 @@ class WorkoutEditorTable(ScrollWidget):
         for row in self.rows[:]:  # Copy list for safe iteration
             self.remove_row(row)
 
+    def shuffle_rows(self, warm_up: bool = False, cool_down: bool = False, workout_structure: str = "Random"):
+        """Randomize the order of workout rows, preserving warm up/cool down if active.
+
+        In Random mode: shuffles exercises randomly
+        In Sequence mode: re-randomizes the category pattern while keeping same exercises
+        """
+        import random
+
+        if len(self.rows) <= 1:
+            return  # Nothing to shuffle
+
+        # Determine which rows to shuffle
+        first_row = None
+        last_row = None
+        middle_rows = self.rows[:]
+
+        if warm_up and len(self.rows) > 0:
+            first_row = middle_rows.pop(0)  # Preserve first row
+
+        if cool_down and len(middle_rows) > 0:
+            last_row = middle_rows.pop()  # Preserve last row
+
+        if workout_structure == "Sequence":
+            # Sequence mode: group by category, randomize pattern, re-interleave
+            middle_rows = self._shuffle_sequence_mode(middle_rows)
+        else:
+            # Random mode: shuffle exercises randomly
+            if middle_rows:
+                random.shuffle(middle_rows)
+
+        # Rebuild the full list
+        new_order = []
+        if first_row:
+            new_order.append(first_row)
+        new_order.extend(middle_rows)
+        if last_row:
+            new_order.append(last_row)
+
+        self.rows = new_order
+
+        # Remove all rows from layout (but keep them in memory)
+        for row in self.rows:
+            self.widget.layout().removeWidget(row)
+
+        # Re-add rows in new shuffled order
+        for i, row in enumerate(self.rows):
+            # Insert at position i + 1 (skip header row at position 0)
+            self.widget.layout().insertWidget(i + 1, row)
+
+        # Emit signal that workout list changed
+        self.workout_list_changed.emit()
+
+    def _shuffle_sequence_mode(self, rows: list):
+        """Shuffle rows in sequence mode: re-randomize category pattern while keeping same exercises.
+
+        Args:
+            rows: List of WorkoutRow widgets to shuffle
+
+        Returns:
+            List of WorkoutRow widgets in new sequence order
+        """
+        import random
+        from collections import defaultdict
+
+        if not rows:
+            return rows
+
+        # Group exercises by category
+        by_category = defaultdict(list)
+        for row in rows:
+            # Get the workout from the row
+            workout = row.workout
+            if workout:
+                category = workout.aerobic_type.name
+                by_category[category].append(row)
+
+        # Get unique categories and randomize their order
+        categories = list(by_category.keys())
+        random.shuffle(categories)
+
+        # Rebuild exercise list by cycling through randomized categories
+        new_order = []
+        max_iterations = len(rows)  # Safety limit
+        category_indices = {cat: 0 for cat in categories}
+
+        for _ in range(max_iterations):
+            for category in categories:
+                if category_indices[category] < len(by_category[category]):
+                    new_order.append(by_category[category][category_indices[category]])
+                    category_indices[category] += 1
+
+            # Check if all exercises have been added
+            if len(new_order) >= len(rows):
+                break
+
+        return new_order[:len(rows)]  # Ensure we return exactly the right number
+
     def set_workout_list(self, workouts: list[Workout], rest_time: int = 30, workout_name: str = ""):
         """
         Populate table with list of workouts.

@@ -25,8 +25,10 @@ class ParametersWidget(GenericWidget):
     save_button_clicked = Signal()
     build_button_clicked = Signal()
     add_exercise_clicked = Signal()
+    shuffle_order_clicked = Signal()
     copy_to_clipboard_clicked = Signal()
     workout_name_changed = Signal(str)  # Emits the workout name
+    workout_cycles_changed = Signal(int)  # Emits the workout cycles count
     title = "Robocross Parameters Widget"
 
     def __init__(self):
@@ -43,7 +45,9 @@ class ParametersWidget(GenericWidget):
                                         clicked=self.build_button_clicked.emit)
         self.button_bar.add_icon_button(icon_path=image_path("add.png"), tool_tip="Manually add exercise to workout",
                                         clicked=self.add_exercise_clicked.emit)
-        self.button_bar.add_icon_button(icon_path=image_path("save.png"), tool_tip="Copy workout data to clipboard for spreadsheet",
+        self.button_bar.add_icon_button(icon_path=image_path("random.png"), tool_tip="Randomize exercise order",
+                                        clicked=self.shuffle_order_clicked.emit)
+        self.button_bar.add_icon_button(icon_path=image_path("copy.png"), tool_tip="Copy workout data to clipboard for spreadsheet",
                                         clicked=self.copy_to_clipboard_clicked.emit)
         self.button_bar.add_stretch()
 
@@ -123,8 +127,18 @@ class ParametersWidget(GenericWidget):
         # Connect table changes to update summary
         self.editor_table.workout_list_changed.connect(self.update_summary)
 
+        # Connect shuffle button to editor table (pass warm up/cool down/structure state)
+        self.shuffle_order_clicked.connect(lambda: self.editor_table.shuffle_rows(
+            warm_up=self.form.warm_up,
+            cool_down=self.form.cool_down,
+            workout_structure=self.form.workout_structure
+        ))
+
         # Connect workout name field to update summary on Return key
         self.form.workout_name_line_edit.returnPressed.connect(self.on_workout_name_changed)
+
+        # Connect workout cycles spinbox to update summary when changed
+        self.form.workout_cycles_spin_box.valueChanged.connect(self.on_workout_cycles_changed)
 
         self.setup_ui()
 
@@ -188,6 +202,13 @@ class ParametersWidget(GenericWidget):
         self.update_summary()
         # Emit signal so viewer can update
         self.workout_name_changed.emit(self.form.workout_name)
+
+    def on_workout_cycles_changed(self, cycles: int):
+        """Handle workout cycles change from form field."""
+        # Update the summary display
+        self.update_summary()
+        # Emit signal so viewer can update
+        self.workout_cycles_changed.emit(cycles)
 
     def update_summary(self):
         """Update summary panel with current workout stats."""

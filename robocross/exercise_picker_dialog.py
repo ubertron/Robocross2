@@ -1,7 +1,8 @@
 """Dialog for picking exercises from a hierarchical tree view."""
 
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QPushButton, QHBoxLayout
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QTreeWidget, QTreeWidgetItem, QPushButton, QHBoxLayout, QLineEdit, QLabel
 from PySide6.QtCore import Qt, QSettings
+from PySide6.QtGui import QCompleter
 
 from core import DEVELOPER
 
@@ -28,6 +29,32 @@ class ExercisePickerDialog(QDialog):
     def setup_ui(self, exercises_by_category: dict, current_exercise: str):
         """Set up the dialog UI."""
         layout = QVBoxLayout(self)
+
+        # Search box at the top
+        search_label = QLabel("Search:")
+        layout.addWidget(search_label)
+
+        self.search_box = QLineEdit()
+        self.search_box.setPlaceholderText("Type to search exercises...")
+        self.search_box.setClearButtonEnabled(True)
+        layout.addWidget(self.search_box)
+
+        # Build complete list of all exercises for autocomplete
+        all_exercises = []
+        self.exercise_items = {}  # Map exercise name -> tree item
+        for exercises in exercises_by_category.values():
+            all_exercises.extend(exercises)
+
+        # Create completer with nice names
+        nice_names = sorted([ex.replace('_', ' ').title() for ex in all_exercises])
+        completer = QCompleter(nice_names)
+        completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        completer.setFilterMode(Qt.MatchFlag.MatchContains)
+        self.search_box.setCompleter(completer)
+
+        # Connect search box signals
+        self.search_box.textChanged.connect(self.on_search_text_changed)
+        self.search_box.returnPressed.connect(self.on_search_return_pressed)
 
         # Create tree widget
         self.tree = QTreeWidget()
@@ -56,6 +83,9 @@ class ExercisePickerDialog(QDialog):
                 exercise_item.setText(0, nice_name)
                 exercise_item.setData(0, Qt.ItemDataRole.UserRole, exercise_name)  # Store actual name
 
+                # Store reference for search functionality
+                self.exercise_items[exercise_name] = exercise_item
+
                 # Highlight current selection
                 if exercise_name == current_exercise:
                     self.tree.setCurrentItem(exercise_item)
@@ -82,6 +112,43 @@ class ExercisePickerDialog(QDialog):
         # Only accept if it's an exercise (not a category)
         if item.parent() is not None:
             self.accept()
+
+    def on_search_text_changed(self, text: str):
+        """Filter tree view based on search text."""
+        search_text = text.strip().lower()
+
+        if not search_text:
+            # Show all items when search is empty
+            for exercise_item in self.exercise_items.values():
+                exercise_item.setHidden(False)
+                # Restore category expansion states
+                if exercise_item.parent():
+                    category_name = exercise_item.parent().text(0).lower()
+                    expanded_state = self.settings.value(f"category_expanded/{category_name}", True, type=bool)
+                    exercise_item.parent().setExpanded(expanded_state)
+        else:
+            # Hide items that don't match search
+            for exercise_name, exercise_item in self.exercise_items.items():
+                nice_name = exercise_name.replace('_', ' ').lower()
+                matches = search_text in nice_name
+                exercise_item.setHidden(not matches)
+
+                # Expand parent category if child matches
+                if matches and exercise_item.parent():
+                    exercise_item.parent().setExpanded(True)
+
+    def on_search_return_pressed(self):
+        """Handle Enter key in search box - select first visible match."""
+        search_text = self.search_box.text().strip().lower()
+
+        if search_text:
+            # Find first visible exercise
+            for exercise_name, exercise_item in self.exercise_items.items():
+                if not exercise_item.isHidden():
+                    self.tree.setCurrentItem(exercise_item)
+                    self.tree.scrollToItem(exercise_item)
+                    self.accept()  # Accept immediately on Enter
+                    break
 
     def accept(self):
         """Store selected exercise and save tree state before accepting."""

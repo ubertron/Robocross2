@@ -14,7 +14,8 @@ LOGGER = get_logger(name=__name__, level=logging.DEBUG)
 class Routine:
     def __init__(self, interval: int = 120, workout_length: int = 35, rest_time: int = 30, nope_list: list = (),
                  equipment_filter: list[Equipment] = (), selected_categories: list[str] = None,
-                 workout_structure: str = "Random"):
+                 workout_structure: str = "Random", category_weights: dict[str, int] = None,
+                 warm_up: bool = False, cool_down: bool = False, target_filter: list = None):
         """
         Workout Routine
         :param interval: seconds
@@ -22,6 +23,10 @@ class Routine:
         :param rest_time: seconds
         :param selected_categories: list of category names (e.g., ['cardio', 'strength', 'combat', 'flexibility'])
         :param workout_structure: 'Random' or 'Sequence'
+        :param category_weights: dict mapping category name to weight percentage (0-100), if None uses equal weighting
+        :param warm_up: if True, force first exercise to be cardio
+        :param cool_down: if True, force last exercise to be flexibility
+        :param target_filter: list of Target enums to filter exercises by body targets (e.g., [Target.legs, Target.core])
         """
         self.interval = interval
         self.workout_length = workout_length
@@ -30,10 +35,15 @@ class Routine:
         self.equipment_filter = equipment_filter
         self.selected_categories = selected_categories if selected_categories else ['cardio', 'strength']
         self.workout_structure = workout_structure
+        self.category_weights = category_weights or self._default_weights()
+        self.warm_up = warm_up
+        self.cool_down = cool_down
+        self.target_filter = target_filter if target_filter else []
         self.workout_data: WorkoutData = WorkoutData(
             nope_list=self.nope_list,
             equipment_filter=self.equipment_filter,
-            selected_categories=self.selected_categories
+            selected_categories=self.selected_categories,
+            target_filter=self.target_filter
         )
 
     def __repr__(self) -> str:
@@ -49,6 +59,34 @@ class Routine:
         workout_count = self.workout_count
         remaining_time = self.workout_length * 60 - workout_count * (self.interval + self.minimum_rest_time)
         return math.floor(self.minimum_rest_time + remaining_time / workout_count)
+
+    def _default_weights(self) -> dict[str, int]:
+        """Default equal weights for selected categories."""
+        if not self.selected_categories:
+            return {}
+        base = 100 // len(self.selected_categories)
+        remainder = 100 % len(self.selected_categories)
+        return {
+            cat: base + (1 if i < remainder else 0)
+            for i, cat in enumerate(self.selected_categories)
+        }
+
+    def weighted_random_choice(self, workouts_by_category: dict) -> Workout:
+        """Select workout using probability weights."""
+        # Build weighted list (category repeated by weight value)
+        weighted_categories = []
+        for category, weight in self.category_weights.items():
+            if category in workouts_by_category and workouts_by_category[category]:
+                weighted_categories.extend([category] * weight)
+
+        if not weighted_categories:
+            # Fallback to uniform selection
+            all_workouts = [w for workouts in workouts_by_category.values() for w in workouts]
+            return random.choice(all_workouts) if all_workouts else None
+
+        # Select category by weight, then random workout from that category
+        category = random.choice(weighted_categories)
+        return random.choice(workouts_by_category[category])
 
     @property
     def cardio_strength_mix(self) -> list[Workout]:
@@ -77,34 +115,72 @@ class Routine:
 
     @property
     def random_workout(self) -> list[Workout]:
-        """Build workout picking randomly from selected categories."""
-        if self.workout_data.workouts:
-            return self.build_routine([random.choice(self.workout_data.workouts) for _ in range(self.workout_count)])
-        return []
+        """Build workout with weighted probability selection."""
+        if not self.workout_data.workouts:
+            return []
+
+        # Group workouts by category
+        by_category = {
+            cat: self.workout_data.get_workouts_by_category(cat)
+            for cat in self.selected_categories
+        }
+        by_category = {k: v for k, v in by_category.items() if v}
+
+        # Build workout using weighted selection
+        workout_items = [
+            self.weighted_random_choice(by_category)
+            for _ in range(self.workout_count)
+        ]
+        workout_items = [w for w in workout_items if w]  # Filter None
+
+        # Apply warm up (force first exercise to be cardio)
+        if self.warm_up and workout_items:
+            cardio_workouts = self.workout_data.get_all_workouts_by_category('cardio')
+            if cardio_workouts:
+                workout_items[0] = random.choice(cardio_workouts)
+                LOGGER.info("Warm up: First exercise set to cardio")
+
+        # Apply cool down (force last exercise to be flexibility)
+        if self.cool_down and workout_items:
+            flexibility_workouts = self.workout_data.get_all_workouts_by_category('flexibility')
+            if flexibility_workouts:
+                workout_items[-1] = random.choice(flexibility_workouts)
+                LOGGER.info("Cool down: Last exercise set to flexibility")
+
+        return self.build_routine(workout_items) if workout_items else []
 
     @property
     def sequence_workout(self) -> list[Workout]:
-        """Build workout cycling through selected categories in a random sequence."""
+        """Build workout cycling through categories in a random repeating pattern (ignores weighting)."""
         if not self.selected_categories:
             return []
 
-        # Generate random sequence of category initials (e.g., CSF for Combat, Strength, Flexibility)
-        category_sequence = self.selected_categories.copy()
-        random.shuffle(category_sequence)
+        # Create simple repeating cycle (ignore weighting)
+        category_cycle = self.selected_categories.copy()
+        random.shuffle(category_cycle)  # Randomize the order once
 
-        LOGGER.info(f"Sequence order: {' → '.join([cat.title() for cat in category_sequence])}")
+        LOGGER.info(f"Category sequence: {' → '.join(category_cycle)} (repeating)")
 
         workout_items = []
         for i in range(self.workout_count):
-            # Cycle through the category sequence
-            category = category_sequence[i % len(category_sequence)]
+            category = category_cycle[i % len(category_cycle)]
             category_workouts = self.workout_data.get_workouts_by_category(category)
+            if category_workouts:
+                workout_items.append(random.choice(category_workouts))
 
-            if not category_workouts:
-                LOGGER.warning(f"No workouts available for category: {category}")
-                continue
+        # Apply warm up (force first exercise to be cardio)
+        if self.warm_up and workout_items:
+            cardio_workouts = self.workout_data.get_all_workouts_by_category('cardio')
+            if cardio_workouts:
+                workout_items[0] = random.choice(cardio_workouts)
+                LOGGER.info("Warm up: First exercise set to cardio")
 
-            workout_items.append(random.choice(category_workouts))
+        # Apply cool down (force last exercise to be flexibility)
+        if self.cool_down and workout_items:
+            flexibility_workouts = self.workout_data.get_all_workouts_by_category('flexibility')
+            if flexibility_workouts:
+                workout_items[-1] = random.choice(flexibility_workouts)
+                LOGGER.info("Cool down: Last exercise set to flexibility")
 
         return self.build_routine(workout_items) if workout_items else []
 
